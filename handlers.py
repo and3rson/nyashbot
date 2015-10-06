@@ -160,7 +160,7 @@ class Stats(Command):
             counts = self.db.select('SELECT COUNT(*) FROM stats UNION SELECT COUNT(*) FROM facts')
             bot.sendMessage(
                 chat_id=message.chat_id,
-                text='Топ-10 спамерів:\n\n' + '\n'.join(
+                text='Топ-5 спамерів:\n\n' + '\n'.join(
                     [
                         '**{}** ({} повідомлень)'.format(row[1], row[2])
                         for row
