@@ -207,3 +207,54 @@ class Fortune(Command):
 
             bot.sendMessage(chat_id=message.chat_id, text=translated)
             return True
+
+
+class DotaRandom(Command):
+    def handle(self, bot, message, cmd, args):
+        if cmd == 'ar':
+            browser = mechanize.Browser()
+            browser.addheaders = [('User-Agent', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)')]
+            browser.set_handle_robots(False)
+            response = browser.open('http://www.dota2.com/heroes/?l=ukrainian')
+            soap = BeautifulSoup(response.read())
+
+            filter_name = soap.find_all('select', {'id': ['filterName']})[0]
+            hero_names = {
+                option['value']: option.text
+                for option
+                in filter_name.find_all('option')[2:]
+            }
+
+            links = soap.find_all('a', {'class': ['heroPickerIconLink']})
+            link = choice(links)
+            parts = link['id'].split('_')[1:]
+            hero_id = '_'.join(parts)
+            bot.sendPhoto(
+                chat_id=message.chat_id,
+                photo='http://cdn.dota2.com/apps/dota2/images/heroes/{}_full.png'.format(hero_id),
+                caption=hero_names[hero_id] + '!'
+            )
+
+
+class Roll(Command):
+    def handle(self, bot, message, cmd, args):
+        if cmd == 'roll':
+            result = choice([1, 2, 3, 4, 5, 6] * 5 + ['Кубік проєбався! Беремо новий...'])
+            if isinstance(result, int):
+                result = 'Випало "{}"!'.format(result)
+            bot.sendMessage(
+                chat_id=message.chat_id,
+                text='@{} кидає кубик... {}'.format(message.from_user.username, result)
+            )
+            return True
+
+
+class Question(Command):
+    def handle(self, bot, message, cmd, args):
+        if cmd == 'q':
+            result = choice(['так', 'ні', '17%, що так', 'нє, ніхуя', 'спитай шось попрощє', 'а хуй його знає'])
+            bot.sendMessage(
+                chat_id=message.chat_id,
+                text='@{}: {}'.format(message.from_user.username, result)
+            )
+            return True

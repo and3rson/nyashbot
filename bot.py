@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+import os
 import sys
 import telegram
 import re
@@ -66,7 +67,14 @@ class Bot(object):
             self.initial = False
 
 bot = Bot()
+try:
+    assert int(os.environ['NO_STATS']) == 1
+    print('Stats disabled')
+except:
+    bot.add_handlers(handlers.Stats())
 bot.add_handlers(
-    handlers.Stats(), handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune()
+    handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(), handlers.DotaRandom(),
+    handlers.Roll(), handlers.Question()
 )
+
 bot.loop()
