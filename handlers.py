@@ -157,6 +157,7 @@ class Stats(Command):
     def handle(self, bot, message, cmd, args):
         if cmd == 'stats':
             result = self.db.select('SELECT * FROM stats ORDER BY message_count DESC LIMIT 5')
+            counts = self.db.select('SELECT COUNT(*) FROM stats UNION SELECT COUNT(*) FROM facts')
             bot.sendMessage(
                 chat_id=message.chat_id,
                 text='Топ-10 спамерів:\n\n' + '\n'.join(
@@ -165,6 +166,9 @@ class Stats(Command):
                         for row
                         in result
                         ]
+                ) + '\n\nВ базі {} юзер(ів) і {} упоротих факт(ів)'.format(
+                    counts[0][0],
+                    counts[1][0]
                 ),
                 parse_mode='Markdown'
             )
