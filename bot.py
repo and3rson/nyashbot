@@ -1,8 +1,19 @@
 #!/usr/bin/env python2.7
+# coding: utf-8
 
+from __future__ import print_function
+
+import sys
 import telegram
 import re
 import handlers
+
+try:
+    import settingsa
+except ImportError:
+    sys.stdout.write("Please create settings.py file this code:\n\nTOKEN='<YOUR_TOKEN>'\n\n")
+    sys.exit(1)
+
 
 
 class Scheduler(object):
@@ -12,7 +23,7 @@ class Scheduler(object):
 
 class Bot(object):
     def __init__(self):
-        self.bot = telegram.Bot(token='127473834:AAFmH8p_UCpHpflKwrEyIWFKHKJcyN7scys')
+        self.bot = telegram.Bot(token=settings.TOKEN)
         self.initial = True
         self.id = 0
         self.handlers = []
