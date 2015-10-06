@@ -166,7 +166,7 @@ class Stats(Command):
                         for row
                         in result
                         ]
-                ) + '\n\nВ базі {} юзер(ів) і {} упоротих факт(ів)'.format(
+                ) + '\n\nВ базі {} юзер(ів) і {} упоротий(х) факт(ів)'.format(
                     counts[0][0],
                     counts[1][0]
                 ),
