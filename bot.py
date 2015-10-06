@@ -11,9 +11,8 @@ import handlers
 try:
     import settings
 except ImportError:
-    sys.stdout.write("Please create settings.py file this code:\n\nTOKEN='<YOUR_TOKEN>'\n\n")
+    sys.stdout.write("Please create settings.py file this code:\n\nTOKEN = '<YOUR_TOKEN>'\n\n")
     sys.exit(1)
-
 
 
 class Scheduler(object):
