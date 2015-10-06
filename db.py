@@ -21,11 +21,13 @@ class DB(object):
                 ])
             ))
 
-    def execute(self, query):
+    def execute(self, query, args=()):
         cursor = self.conn.cursor()
-        cursor.execute(query)
+        cursor.execute(query, args)
         return cursor
 
+    def select(self, query, args=()):
+        return self.execute(query, args).fetchall()
 
-    def select(self, query):
-        return self.execute(query).fetchall()
+
+db = DB()

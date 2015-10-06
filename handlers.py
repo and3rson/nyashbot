@@ -8,7 +8,7 @@ import re
 from urllib import urlencode
 from random import choice, random
 from bs4 import BeautifulSoup
-from db import DB
+from db import db
 import json
 from HTMLParser import HTMLParser
 
@@ -148,7 +148,7 @@ class Pasta(Command):
 
 class Stats(Command):
     def __init__(self):
-        self.db = DB()
+        self.db = db
         self.db.upsert('stats', [
             ('username', 'varchar(64)'),
             ('message_count', 'int'),
@@ -249,7 +249,7 @@ class Roll(Command):
             return True
 
 
-class Question(Command):
+class Questions(Command):
     def handle(self, bot, message, cmd, args):
         if cmd == 'q':
             result = choice(['так', 'ні', '17%, що так', 'нє, ніхуя', 'спитай шось попрощє', 'а хуй його знає'])
@@ -258,3 +258,40 @@ class Question(Command):
                 text='@{}: {}'.format(message.from_user.username, result)
             )
             return True
+
+
+class Facts(Command):
+    def __init__(self):
+        self.db = db
+        self.db.upsert('facts', [
+            ('author', 'varchar(64)'),
+            ('text', 'text'),
+        ])
+
+    def handle(self, bot, message, cmd, args):
+        if cmd == 'fact':
+            results = db.select('SELECT text FROM facts ORDER BY RANDOM() LIMIT 1')
+            if not results:
+                raise Exception('В базі ще немає жодного факту :(')
+            users = db.select('SELECT username FROM stats ORDER BY RANDOM() LIMIT 5')
+            if not users or len(users) < 3:
+                raise Exception('Недостатньо людей в базі :(')
+            result = results[0][0]
+            users = [u'@{}'.format(user[0]) for user in users]
+            bot.sendMessage(
+                chat_id=message.chat_id,
+                text=result.format(*users)
+            )
+            return True
+        elif cmd == 'addfact':
+            if len(args.strip()) == 0:
+                raise Exception('Введіть, що саме додати! Наприклад: "/addfact {} любить фапати на аніме.".')
+            if args.find('{}') == -1:
+                raise Exception('В факті має бути принаймні одна і не більше п’яти пар фігурних дужок - "{}".')
+            if args.count('{}') > 3:
+                raise Exception('В факті має бути принаймні одна і не більше трьох пар фігурних дужок - "{}".')
+            self.db.execute('INSERT INTO facts(author, text) VALUES("{}", ?)'.format(message.from_user.username), (args.strip(),))
+            bot.sendMessage(
+                chat_id=message.chat_id,
+                text='Факт додано!'
+            )
