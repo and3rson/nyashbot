@@ -56,5 +56,7 @@ class Bot(object):
             self.initial = False
 
 bot = Bot()
-bot.add_handlers(handlers.Stats(), handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta())
+bot.add_handlers(
+    handlers.Stats(), handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune()
+)
 bot.loop()

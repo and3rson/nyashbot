@@ -29,6 +29,24 @@ def strip_tags(html):
     return s.get_data()
 
 
+def translate(src, dest, text):
+    PATTERN = 'http://translate.google.com/translate_a/t?client=x&text={text}&hl={src}&sl={src}&tl={dest}'
+    url = PATTERN.format(src=src, dest=dest, text=text.replace(' ', '+'))
+
+    browser = mechanize.Browser()
+    browser.addheaders = [('User-Agent', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)')]
+    browser.set_handle_robots(False)
+    browser.open('https://translate.google.com')
+    browser.select_form(nr=0)
+
+    browser.form['sl'] = [src]
+    browser.form['tl'] = [dest]
+    browser.form['text'] = text
+    response = browser.submit()
+    doc = BeautifulSoup(response.read())
+    return ''.join([x.text for x in doc.select('span#result_box > span')])
+
+
 class Command(object):
     def handle(self, *args):
         pass
@@ -150,14 +168,40 @@ class Stats(Command):
             )
             return True
         else:
-            self.increase(message.from_user.username)
+            self.increase(message)
 
     def handle_message(self, bot, message):
-        self.increase(message.from_user.username)
+        self.increase(message)
 
-    def increase(self, username):
-        result = self.db.select('SELECT * FROM stats WHERE username = "{}"'.format(username))
+    def increase(self, message):
+        if not isinstance(message.chat, telegram.GroupChat):
+            return
+
+        result = self.db.select('SELECT * FROM stats WHERE username = "{}"'.format(message.from_user.username))
         if not result:
-            self.db.execute('INSERT INTO stats(username, message_count) VALUES("{}", {})'.format(username, 1))
+            self.db.execute('INSERT INTO stats(username, message_count) VALUES("{}", {})'.format(
+                message.from_user.username,
+                1
+            ))
         else:
-            self.db.execute('UPDATE stats SET message_count = message_count + 1 WHERE username = "{}"'.format(username))
+            self.db.execute('UPDATE stats SET message_count = message_count + 1 WHERE username = "{}"'.format(
+                message.from_user.username
+            ))
+
+
+class Fortune(Command):
+    def handle(self, bot, message, cmd, args):
+        if cmd == 'fortune':
+            browser = mechanize.Browser()
+            browser.addheaders = [('User-Agent', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)')]
+            browser.set_handle_robots(False)
+            response = browser.open('https://helloacm.com/api/fortune/')
+            text = response.read().replace('\\t', '').replace('\\n', '\n').replace('\\"', '"').replace('\\\'', '\'').strip('"')
+
+            translated = u'@{}: {}'.format(
+                message.from_user.username,
+                '\n'.join([translate('en', 'uk', line) for line in text.split('\n')])
+            )
+
+            bot.sendMessage(chat_id=message.chat_id, text=translated)
+            return True
