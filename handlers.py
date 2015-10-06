@@ -7,6 +7,7 @@ import mechanize
 import re
 from urllib import urlencode
 from random import choice, random
+import urllib2
 from bs4 import BeautifulSoup
 from db import db
 import json
@@ -299,3 +300,31 @@ class Facts(Command):
                 chat_id=message.chat_id,
                 text='Факт додано!'
             )
+
+
+class PornRoll(Command):
+    def handle(self, bot, message, cmd, args):
+        if cmd == 'pornroll':
+            attempts = 0
+
+            while True:
+                if attempts > 3:
+                    raise Exception('Please try again :/')
+                try:
+                    id = int(random() * 100000)
+                    url = 'http://www.redtube.com/{}'.format(id)
+                    request = urllib2.Request(url)
+                    response = urllib2.urlopen(request)
+                    data = response.read()
+                except:
+                    pass
+                else:
+                    cover_url = re.findall('poster: "([^"]+)"', data)
+                    cover_url = cover_url[0].replace('\\/', '/')
+
+                    video_title = re.findall('videoTitle: "([^"]+)"', data)
+                    video_title = video_title[0].replace('\\/', '/')
+                    bot.sendPhoto(chat_id=message.chat_id, photo=cover_url, caption='{}: {}'.format(video_title, url))
+                    return True
+
+                attempts += 1
