@@ -13,7 +13,7 @@ import time
 from db import db, stars
 import json
 from HTMLParser import HTMLParser
-from threading import Thread
+import math
 
 
 class MLStripper(HTMLParser):
@@ -62,12 +62,8 @@ class Command(object):
         now = time.time()
         time_left = self.last_call + amount - now
         if time_left > 0:
-            raise Exception('Зачекайте ще {} секунд(и), перш ніж викликати цю команду знов.'.format(time_left))
+            raise Exception('Зачекайте ще {} секунд(и), перш ніж викликати цю команду знов.'.format(int(math.ceil(time_left))))
         self.last_call = time.time()
-
-    def detach(self, procedure, *args, **kwargs):
-        thread = Thread(target=procedure, args=args, kwargs=kwargs)
-        thread.start()
 
     def _handle(self, bot, message, cmd, args):
         method_name = 'handle_{}'.format(cmd)
