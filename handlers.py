@@ -396,6 +396,8 @@ class PornRoll(Command):
                     title = re.findall('title[\s]*=[\s]*"([^"]+)"', script)[0]
                     url = re.findall('a[\s]*href="([^"]+)"', script)[0]
 
+                cover_url = cover_url.replace('/thumbs/', '/thumbslll/')
+
                 duration = block.find('span', {'class': ['duration']}).text
 
                 bot.sendPhoto(
