@@ -3,6 +3,11 @@
 
 from __future__ import print_function
 
+from gevent import spawn, monkey, joinall
+
+monkey.patch_socket()
+monkey.patch_ssl()
+
 import os
 import sys
 import telegram
@@ -35,24 +40,19 @@ class Bot(object):
     def handle_update(self, update):
         message = update.message
         match = re.findall('^/([a-zA-Z_0-9]+)(\s+(.+$))?', message.text.strip())
-        try:
-            if match:
-                match = match[0]
-                cmd = match[0].lower()
-                args = match[2]
-                for handler in self.handlers:
-                    if handler._handle(self.bot, message, cmd, args):
-                        break
-            else:
-                for handler in self.handlers:
-                    if handler.handle_message(self.bot, message):
-                        break
-        except Exception as e:
-            self.bot.sendMessage(
-                chat_id=message.chat_id,
-                text='**{}**: {}'.format(str(e.__class__.__name__), str(e)),
-                parse_mode='Markdown'
-            )
+        if match:
+            match = match[0]
+            cmd = match[0].lower()
+            args = match[2]
+            method_name = 'handle_{}'.format(cmd)
+            for handler in self.handlers:
+                if hasattr(handler, method_name):
+                    spawn(handler._handle, self.bot, message, cmd, args)
+                    break
+        else:
+            for handler in self.handlers:
+                if handler.handle_message(self.bot, message):
+                    break
 
     def loop(self):
         while True:
@@ -66,11 +66,12 @@ class Bot(object):
                 self.id = max(self.id, update.update_id + 1)
             self.initial = False
 
+
 bot = Bot()
 try:
     assert int(os.environ['NO_STATS']) == 1
     print('Stats disabled')
-except:
+except (KeyError, ValueError, TypeError, AssertionError) as e:
     bot.add_handlers(handlers.Stats())
 bot.add_handlers(
     handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(), handlers.DotaRandom(),

@@ -55,9 +55,6 @@ def translate(src, dest, text):
 class Command(object):
     last_call = 0
 
-    def handle(self, *args):
-        pass
-
     def handle_message(self, *args):
         pass
 
@@ -72,31 +69,40 @@ class Command(object):
         thread = Thread(target=procedure, args=args, kwargs=kwargs)
         thread.start()
 
+    def _handle(self, bot, message, cmd, args):
+        method_name = 'handle_{}'.format(cmd)
+        try:
+            getattr(self, method_name)(bot, message, cmd, args)
+        except Exception as e:
+            bot.sendMessage(
+                chat_id=message.chat_id,
+                text='**{}**: {}'.format(str(e.__class__.__name__), str(e)),
+                parse_mode='Markdown'
+            )
+
 
 class GoogleHandler(Command):
+    P1 = ['', '', '', '', 'sexy', 'nice', 'girl', 'big', 'сочные', 'большие', 'женские']
+    P2 = ['tits', 'boobs', 'boobies', 'сиськи', 'сисечки', 'титьки']
+
+
     def __init__(self):
         self.browser = mechanize.Browser()
         # self.browser.addheaders = [('User-Agent', 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 5.1)')]
         self.browser.addheaders = [('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1')]
         self.browser.set_handle_robots(False)
 
-    def handle(self, bot, message, cmd, args):
+    def handle_show(self, bot, message, cmd, args):
         if cmd not in ('tits', 'show1', 'show'):
             return False
 
         bot.sendChatAction(message.chat_id, telegram.ChatAction.TYPING)
 
-        P1 = ['', '', '', '', 'sexy', 'nice', 'girl', 'big', 'сочные', 'большие', 'женские']
-        P2 = ['tits', 'boobs', 'boobies', 'сиськи', 'сисечки', 'титьки']
-
-        # start = int(random() * 60)
-        # Default: random from first 30 results
         start = int(random() * 26)
 
         if cmd == 'tits':
             cmd = 'show'
-            args = choice(P1) + ' ' + choice(P2)
-            # args = 'сиськи'
+            args = choice(GoogleHandler.P1) + ' ' + choice(GoogleHandler.P2)
         else:
             if len(args.strip()) == 0:
                 raise Exception('Введіть, що собсно шукати.')
@@ -131,19 +137,21 @@ class GoogleHandler(Command):
                 except Exception as e:
                     attempt += 1
 
+    handle_show1 = handle_show
+    handle_tits = handle_show
+
 
 class FooHandler(Command):
-    def handle(self, bot, message, cmd, args):
-        if cmd == 'foo':
-            bot.sendMessage(chat_id=message.chat_id, text='Bar')
-            return True
+    def handle_foo(self, bot, message, cmd, args):
+        bot.sendMessage(chat_id=message.chat_id, text='Bar')
+        return True
 
 
 class Pasta(Command):
     def __init__(self):
         self.browser = mechanize.Browser()
 
-    def handle(self, bot, message, cmd, args):
+    def handle_pasta(self, bot, message, cmd, args):
         if cmd == 'pasta':
             response = self.browser.open('http://kopipasta.ru/random/all/all/desc/')
             soup = BeautifulSoup(response.read())
@@ -182,7 +190,7 @@ class Stats(Command):
         users = [u'@{}'.format(user[0]) for user in users]
         return result.format(*users)
 
-    def handle(self, bot, message, cmd, args):
+    def handle_stats(self, bot, message, cmd, args):
         if cmd == 'stats':
             result = self.db.select('SELECT * FROM stats ORDER BY message_count DESC LIMIT 5')
             counts = self.db.select('SELECT COUNT(*) FROM stats UNION SELECT COUNT(*) FROM facts')
@@ -227,8 +235,7 @@ class Stats(Command):
 
 
 class Fortune(Command):
-    def handle(self, bot, message, cmd, args):
-
+    def handle_fortune(self, bot, message, cmd, args):
         if cmd == 'fortune':
             self.throttle(5)
 
@@ -248,7 +255,7 @@ class Fortune(Command):
 
 
 class DotaRandom(Command):
-    def handle(self, bot, message, cmd, args):
+    def handle_ar(self, bot, message, cmd, args):
         if cmd == 'ar':
             browser = mechanize.Browser()
             browser.addheaders = [('User-Agent', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)')]
@@ -275,7 +282,7 @@ class DotaRandom(Command):
 
 
 class Roll(Command):
-    def handle(self, bot, message, cmd, args):
+    def handle_roll(self, bot, message, cmd, args):
         if cmd == 'roll':
             result = choice([1, 2, 3, 4, 5, 6] * 5 + ['Кубік проєбався! Беремо новий...'])
             if isinstance(result, int):
@@ -288,7 +295,7 @@ class Roll(Command):
 
 
 class Questions(Command):
-    def handle(self, bot, message, cmd, args):
+    def handle_q(self, bot, message, cmd, args):
         if cmd == 'q':
             result = choice(['так', 'ні', '17%, що так', 'нє, ніхуя', 'спитай шось попрощє', 'а хуй його знає'])
             bot.sendMessage(
@@ -306,7 +313,7 @@ class Facts(Command):
             ('text', 'text'),
         ])
 
-    def handle(self, bot, message, cmd, args):
+    def handle_fact(self, bot, message, cmd, args):
         if cmd == 'fact':
             results = db.select('SELECT text FROM facts ORDER BY RANDOM() LIMIT 1')
             if not results:
@@ -334,9 +341,11 @@ class Facts(Command):
                 text='Факт додано!'
             )
 
+    handle_addfact = handle_fact
+
 
 class PornRoll(Command):
-    def handle(self, bot, message, cmd, args):
+    def handle_pornroll(self, bot, message, cmd, args):
         if cmd == 'pornroll':
             self.throttle(5)
 
@@ -366,7 +375,7 @@ class PornRoll(Command):
 
 
 class Stars(Command):
-    def handle(self, bot, message, cmd, args):
+    def handle_stars(self, bot, message, cmd, args):
         if cmd == 'star':
             slug, name, video_count, poster_url = stars.select('SELECT * FROM stars ORDER BY RANDOM() LIMIT 1')[0]
             bot.sendPhoto(
@@ -382,7 +391,7 @@ class Stars(Command):
 
 
 class BarrelRollHandler(Command):
-    def handle(self, bot, message, cmd, args):
+    def handle_barrelroll(self, bot, message, cmd, args):
         if cmd == 'barrelroll':
             self.throttle(30)
             bot.sendAudio(chat_id=message.chat_id, audio=open('./res/roll.mp3', 'rb'), title='Do the barrel roll!')
