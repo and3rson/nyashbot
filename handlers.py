@@ -342,7 +342,7 @@ class Facts(Command):
 
 class PornRoll(Command):
     def handle_redroll(self, bot, message, cmd, args):
-        self.throttle(5)
+        self.throttle(2)
 
         attempts = 0
 
@@ -369,7 +369,7 @@ class PornRoll(Command):
             attempts += 1
 
     def handle_xroll(self, bot, message, cmd, args):
-        self.throttle(5)
+        self.throttle(2)
 
         attempts = 0
 
