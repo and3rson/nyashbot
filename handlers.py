@@ -155,10 +155,23 @@ class Stats(Command):
             ('message_count', 'int'),
         ])
 
+
+    def get_fact(self):
+        results = db.select('SELECT text FROM facts ORDER BY RANDOM() LIMIT 1')
+        if not results:
+            raise Exception('В базі ще немає жодного факту :(')
+        users = db.select('SELECT username FROM stats ORDER BY RANDOM() LIMIT 5')
+        if not users or len(users) < 3:
+            raise Exception('Недостатньо людей в базі :(')
+        result = results[0][0]
+        users = [u'@{}'.format(user[0]) for user in users]
+        return result.format(*users)
+
     def handle(self, bot, message, cmd, args):
         if cmd == 'stats':
             result = self.db.select('SELECT * FROM stats ORDER BY message_count DESC LIMIT 5')
             counts = self.db.select('SELECT COUNT(*) FROM stats UNION SELECT COUNT(*) FROM facts')
+            stars_count = stars.select('SELECT COUNT(*) FROM stars')
             bot.sendMessage(
                 chat_id=message.chat_id,
                 text='Топ-5 спамерів:\n\n' + '\n'.join(
@@ -167,9 +180,11 @@ class Stats(Command):
                         for row
                         in result
                         ]
-                ) + '\n\nВ базі {} юзер(ів) і {} упоротий(х) факт(ів)'.format(
+                ) + '\n\nВ базі {} юзер(ів) і {} упоротий(х) факт(ів).\nПроіндексовано {} порнозірок з XVideos.\nКрім того, доводимо до вашого відома, що {}.'.format(
                     counts[0][0],
-                    counts[1][0]
+                    counts[1][0],
+                    stars_count[0][0],
+                    self.get_fact()
                 ),
                 parse_mode='Markdown'
             )
