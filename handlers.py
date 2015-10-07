@@ -9,9 +9,11 @@ from urllib import urlencode
 from random import choice, random
 import urllib2
 from bs4 import BeautifulSoup
+import time
 from db import db, stars
 import json
 from HTMLParser import HTMLParser
+from threading import Thread
 
 
 class MLStripper(HTMLParser):
@@ -51,11 +53,24 @@ def translate(src, dest, text):
 
 
 class Command(object):
+    last_call = 0
+
     def handle(self, *args):
         pass
 
     def handle_message(self, *args):
         pass
+
+    def throttle(self, amount):
+        now = time.time()
+        time_left = self.last_call + amount - now
+        if time_left > 0:
+            raise Exception('Зачекайте ще {} секунд(и), перш ніж викликати цю команду знов.'.format(time_left))
+        self.last_call = time.time()
+
+    def detach(self, procedure, *args, **kwargs):
+        thread = Thread(target=procedure, args=args, kwargs=kwargs)
+        thread.start()
 
 
 class GoogleHandler(Command):
@@ -213,7 +228,10 @@ class Stats(Command):
 
 class Fortune(Command):
     def handle(self, bot, message, cmd, args):
+
         if cmd == 'fortune':
+            self.throttle(5)
+
             browser = mechanize.Browser()
             browser.addheaders = [('User-Agent', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)')]
             browser.set_handle_robots(False)
@@ -320,6 +338,8 @@ class Facts(Command):
 class PornRoll(Command):
     def handle(self, bot, message, cmd, args):
         if cmd == 'pornroll':
+            self.throttle(5)
+
             attempts = 0
 
             while True:
@@ -358,4 +378,12 @@ class Stars(Command):
                     'http://www.xvideos.com/profiles/{}#_tabVideos,videos-best'.format(slug)
                 )
             )
+            return True
+
+
+class BarrelRollHandler(Command):
+    def handle(self, bot, message, cmd, args):
+        if cmd == 'barrelroll':
+            self.throttle(30)
+            bot.sendAudio(chat_id=message.chat_id, audio=open('./res/roll.mp3', 'rb'), title='Do the barrel roll!')
             return True

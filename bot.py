@@ -41,7 +41,7 @@ class Bot(object):
                 cmd = match[0].lower()
                 args = match[2]
                 for handler in self.handlers:
-                    if handler.handle(self.bot, message, cmd, args):
+                    if handler._handle(self.bot, message, cmd, args):
                         break
             else:
                 for handler in self.handlers:
@@ -74,7 +74,8 @@ except:
     bot.add_handlers(handlers.Stats())
 bot.add_handlers(
     handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(), handlers.DotaRandom(),
-    handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(), handlers.Stars()
+    handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(), handlers.Stars(),
+    handlers.BarrelRollHandler()
 )
 
 bot.loop()
