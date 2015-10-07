@@ -74,7 +74,7 @@ except:
     bot.add_handlers(handlers.Stats())
 bot.add_handlers(
     handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(), handlers.DotaRandom(),
-    handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll()
+    handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(), handlers.Stars()
 )
 
 bot.loop()

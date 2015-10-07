@@ -9,7 +9,7 @@ from urllib import urlencode
 from random import choice, random
 import urllib2
 from bs4 import BeautifulSoup
-from db import db
+from db import db, stars
 import json
 from HTMLParser import HTMLParser
 
@@ -228,7 +228,7 @@ class DotaRandom(Command):
                 option['value']: option.text
                 for option
                 in filter_name.find_all('option')[2:]
-            }
+                }
 
             links = soap.find_all('a', {'class': ['heroPickerIconLink']})
             link = choice(links)
@@ -328,3 +328,19 @@ class PornRoll(Command):
                     return True
 
                 attempts += 1
+
+
+class Stars(Command):
+    def handle(self, bot, message, cmd, args):
+        if cmd == 'star':
+            slug, name, video_count, poster_url = stars.select('SELECT * FROM stars ORDER BY RANDOM() LIMIT 1')[0]
+            bot.sendPhoto(
+                chat_id=message.chat_id,
+                photo=poster_url,
+                caption='{} ({} videos): {}'.format(
+                    name,
+                    video_count,
+                    'http://www.xvideos.com/profiles/{}#_tabVideos,videos-best'.format(slug)
+                )
+            )
+            return True

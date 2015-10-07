@@ -30,4 +30,5 @@ class DB(object):
         return self.execute(query, args).fetchall()
 
 
-db = DB()
+db = DB('./db.sqlite')
+stars = DB('./stars.sqlite')
