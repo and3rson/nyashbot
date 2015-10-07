@@ -341,33 +341,75 @@ class Facts(Command):
 
 
 class PornRoll(Command):
-    def handle_pornroll(self, bot, message, cmd, args):
-        if cmd == 'pornroll':
-            self.throttle(5)
+    def handle_redroll(self, bot, message, cmd, args):
+        self.throttle(5)
 
-            attempts = 0
+        attempts = 0
 
-            while True:
-                if attempts > 3:
-                    raise Exception('Please try again :/')
-                try:
-                    id = int(random() * 100000)
-                    url = 'http://www.redtube.com/{}'.format(id)
-                    request = urllib2.Request(url)
-                    response = urllib2.urlopen(request)
-                    data = response.read()
-                except:
-                    pass
+        while True:
+            if attempts > 3:
+                raise Exception('Please try again :/')
+            try:
+                id = int(random() * 100000)
+                url = 'http://www.redtube.com/{}'.format(id)
+                request = urllib2.Request(url)
+                response = urllib2.urlopen(request)
+                data = response.read()
+            except:
+                pass
+            else:
+                cover_url = re.findall('poster: "([^"]+)"', data)
+                cover_url = cover_url[0].replace('\\/', '/')
+
+                video_title = re.findall('videoTitle: "([^"]+)"', data)
+                video_title = video_title[0].replace('\\/', '/')
+                bot.sendPhoto(chat_id=message.chat_id, photo=cover_url, caption='{}: {}'.format(video_title, url))
+                return True
+
+            attempts += 1
+
+    def handle_xroll(self, bot, message, cmd, args):
+        self.throttle(5)
+
+        attempts = 0
+
+        while True:
+            if attempts > 3:
+                raise Exception('Please try again :/')
+
+            try:
+                id = int(random() * 100000)
+                data = BeautifulSoup(urllib2.urlopen('http://www.xvideos.com/new/{}'.format(id)).read())
+            except:
+                pass
+            else:
+                blocks = data.find_all('div', {'class': ['thumbBlock']})
+                block = choice(blocks)
+                img = block.find('img')
+                if img:
+                    cover_url = block.find('img')['src']
+                    title = block.find('p').find('a').text
+                    url = block.find('a')['href']
                 else:
-                    cover_url = re.findall('poster: "([^"]+)"', data)
-                    cover_url = cover_url[0].replace('\\/', '/')
+                    script = block.find('script').text
+                    cover_url = re.findall('img[\s]*src="([^"]+)"', script)[0]
+                    title = re.findall('title[\s]*=[\s]*"([^"]+)"', script)[0]
+                    url = re.findall('a[\s]*href="([^"]+)"', script)[0]
 
-                    video_title = re.findall('videoTitle: "([^"]+)"', data)
-                    video_title = video_title[0].replace('\\/', '/')
-                    bot.sendPhoto(chat_id=message.chat_id, photo=cover_url, caption='{}: {}'.format(video_title, url))
-                    return True
+                duration = block.find('span', {'class': ['duration']}).text
 
-                attempts += 1
+                bot.sendPhoto(
+                    chat_id=message.chat_id,
+                    photo=cover_url,
+                    caption='{} {}: {}'.format(
+                        title,
+                        duration,
+                        'http://www.xvideos.com/{}'.format(url.lstrip('/'))
+                    )
+                )
+                return True
+
+            attempts += 1
 
 
 class Stars(Command):
