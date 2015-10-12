@@ -28,10 +28,11 @@ class Scheduler(object):
 
 class Bot(object):
     def __init__(self):
-        self.bot = telegram.Bot(token=settings.TOKEN)
+        self.telegram = telegram.Bot(token=settings.TOKEN)
         self.initial = True
         self.id = 0
         self.handlers = []
+        self.terminated = False
 
     def add_handlers(self, *args):
         for handler in args:
@@ -47,24 +48,28 @@ class Bot(object):
             method_name = 'handle_{}'.format(cmd)
             for handler in self.handlers:
                 if hasattr(handler, method_name):
-                    spawn(handler._handle, self.bot, message, cmd, args)
+                    spawn(handler.handle, self, message, cmd, args)
                     break
         else:
             for handler in self.handlers:
-                if handler.handle_message(self.bot, message):
-                    break
+                if hasattr(handler, 'handle_message'):
+                    if handler.handle_message(self.telegram, message):
+                        break
 
     def loop(self):
-        while True:
+        while not self.terminated:
             if not self.initial:
-                updates = self.bot.getUpdates(timeout=5, offset=self.id)
+                updates = self.telegram.getUpdates(timeout=5, offset=self.id)
             else:
-                updates = self.bot.getUpdates(timeout=0, offset=self.id)
+                updates = self.telegram.getUpdates(timeout=0, offset=self.id)
             for update in updates:
                 if not self.initial:
                     self.handle_update(update)
                 self.id = max(self.id, update.update_id + 1)
             self.initial = False
+
+    def stop(self):
+        self.terminated = True
 
 
 bot = Bot()
@@ -74,9 +79,9 @@ try:
 except (KeyError, ValueError, TypeError, AssertionError) as e:
     bot.add_handlers(handlers.Stats())
 bot.add_handlers(
-    handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(), handlers.DotaRandom(),
-    handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(), handlers.Stars(),
-    handlers.BarrelRollHandler()
+    handlers.GenericHandler(), handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(),
+    handlers.DotaRandom(), handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(),
+    handlers.Stars(), handlers.BarrelRollHandler()
 )
 
 bot.loop()

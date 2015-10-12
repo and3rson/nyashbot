@@ -55,9 +55,6 @@ def translate(src, dest, text):
 class Command(object):
     last_call = 0
 
-    def handle_message(self, *args):
-        pass
-
     def throttle(self, amount):
         now = time.time()
         time_left = self.last_call + amount - now
@@ -65,16 +62,22 @@ class Command(object):
             raise Exception('Зачекайте ще {} секунд(и), перш ніж викликати цю команду знов.'.format(int(math.ceil(time_left))))
         self.last_call = time.time()
 
-    def _handle(self, bot, message, cmd, args):
+    def handle(self, engine, message, cmd, args):
         method_name = 'handle_{}'.format(cmd)
         try:
-            getattr(self, method_name)(bot, message, cmd, args)
+            getattr(self, method_name)(engine, message, cmd, args)
         except Exception as e:
-            bot.sendMessage(
+            engine.telegram.sendMessage(
                 chat_id=message.chat_id,
                 text='**{}**: {}'.format(str(e.__class__.__name__), str(e)),
                 parse_mode='Markdown'
             )
+
+
+class GenericHandler(Command):
+    def handle_stop(self, engine, message, cmd, args):
+        engine.telegram.sendMessage(chat_id=message.chat_id, text='Bye!')
+        engine.stop()
 
 
 class GoogleHandler(Command):
@@ -88,11 +91,11 @@ class GoogleHandler(Command):
         self.browser.addheaders = [('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1')]
         self.browser.set_handle_robots(False)
 
-    def handle_show(self, bot, message, cmd, args):
+    def handle_show(self, engine, message, cmd, args):
         if cmd not in ('tits', 'show1', 'show'):
             return False
 
-        bot.sendChatAction(message.chat_id, telegram.ChatAction.TYPING)
+        engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.TYPING)
 
         start = int(random() * 26)
 
@@ -126,8 +129,8 @@ class GoogleHandler(Command):
                     result = choice(results)
                     # title = urlencode(dict(d=result['title'].encode('utf-8')))[2:]
                     title = result['title'].encode('utf-8')
-                    bot.sendChatAction(message.chat_id, telegram.ChatAction.UPLOAD_PHOTO)
-                    bot.sendPhoto(chat_id=message.chat_id, photo=result['url'], caption=strip_tags(title))
+                    engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.UPLOAD_PHOTO)
+                    engine.telegram.sendPhoto(chat_id=message.chat_id, photo=result['url'], caption=strip_tags(title))
                     return True
                     break
                 except Exception as e:
@@ -138,8 +141,8 @@ class GoogleHandler(Command):
 
 
 class FooHandler(Command):
-    def handle_foo(self, bot, message, cmd, args):
-        bot.sendMessage(chat_id=message.chat_id, text='Bar')
+    def handle_foo(self, engine, message, cmd, args):
+        engine.telegram.sendMessage(chat_id=message.chat_id, text='Bar')
         return True
 
 
@@ -147,7 +150,7 @@ class Pasta(Command):
     def __init__(self):
         self.browser = mechanize.Browser()
 
-    def handle_pasta(self, bot, message, cmd, args):
+    def handle_pasta(self, engine, message, cmd, args):
         if cmd == 'pasta':
             response = self.browser.open('http://kopipasta.ru/random/all/all/desc/')
             soup = BeautifulSoup(response.read())
@@ -162,7 +165,7 @@ class Pasta(Command):
 
             text = u'**{}**\n > {}\nПовна версія: {}'.format(title, content, href)
 
-            bot.sendMessage(chat_id=message.chat_id, text=text, parse_mode='Markdown')
+            engine.telegram.sendMessage(chat_id=message.chat_id, text=text, parse_mode='Markdown')
             return True
 
 
@@ -186,12 +189,12 @@ class Stats(Command):
         users = [u'@{}'.format(user[0]) for user in users]
         return result.format(*users)
 
-    def handle_stats(self, bot, message, cmd, args):
+    def handle_stats(self, engine, message, cmd, args):
         if cmd == 'stats':
             result = self.db.select('SELECT * FROM stats ORDER BY message_count DESC LIMIT 5')
             counts = self.db.select('SELECT COUNT(*) FROM stats UNION SELECT COUNT(*) FROM facts')
             stars_count = stars.select('SELECT COUNT(*) FROM stars')
-            bot.sendMessage(
+            engine.telegram.sendMessage(
                 chat_id=message.chat_id,
                 text='Топ-5 спамерів:\n\n' + '\n'.join(
                     [
@@ -211,7 +214,7 @@ class Stats(Command):
         else:
             self.increase(message)
 
-    def handle_message(self, bot, message):
+    def handle_message(self, engine, message):
         self.increase(message)
 
     def increase(self, message):
@@ -231,7 +234,7 @@ class Stats(Command):
 
 
 class Fortune(Command):
-    def handle_fortune(self, bot, message, cmd, args):
+    def handle_fortune(self, engine, message, cmd, args):
         if cmd == 'fortune':
             self.throttle(5)
 
@@ -246,12 +249,12 @@ class Fortune(Command):
                 '\n'.join([translate('en', 'uk', line) for line in text.split('\n')])
             )
 
-            bot.sendMessage(chat_id=message.chat_id, text=translated)
+            engine.telegram.sendMessage(chat_id=message.chat_id, text=translated)
             return True
 
 
 class DotaRandom(Command):
-    def handle_ar(self, bot, message, cmd, args):
+    def handle_ar(self, engine, message, cmd, args):
         if cmd == 'ar':
             browser = mechanize.Browser()
             browser.addheaders = [('User-Agent', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)')]
@@ -270,7 +273,7 @@ class DotaRandom(Command):
             link = choice(links)
             parts = link['id'].split('_')[1:]
             hero_id = '_'.join(parts)
-            bot.sendPhoto(
+            engine.telegram.sendPhoto(
                 chat_id=message.chat_id,
                 photo='http://cdn.dota2.com/apps/dota2/images/heroes/{}_full.png'.format(hero_id),
                 caption=hero_names[hero_id] + '!'
@@ -278,12 +281,12 @@ class DotaRandom(Command):
 
 
 class Roll(Command):
-    def handle_roll(self, bot, message, cmd, args):
+    def handle_roll(self, engine, message, cmd, args):
         if cmd == 'roll':
             result = choice([1, 2, 3, 4, 5, 6] * 5 + ['Кубік проєбався! Беремо новий...'])
             if isinstance(result, int):
                 result = 'Випало "{}"!'.format(result)
-            bot.sendMessage(
+            engine.telegram.sendMessage(
                 chat_id=message.chat_id,
                 text='@{} кидає кубик... {}'.format(message.from_user.username, result)
             )
@@ -291,10 +294,10 @@ class Roll(Command):
 
 
 class Questions(Command):
-    def handle_q(self, bot, message, cmd, args):
+    def handle_q(self, engine, message, cmd, args):
         if cmd == 'q':
             result = choice(['так', 'ні', '17%, що так', 'нє, ніхуя', 'спитай шось попрощє', 'а хуй його знає'])
-            bot.sendMessage(
+            engine.telegram.sendMessage(
                 chat_id=message.chat_id,
                 text='@{}: {}'.format(message.from_user.username, result)
             )
@@ -309,7 +312,7 @@ class Facts(Command):
             ('text', 'text'),
         ])
 
-    def handle_fact(self, bot, message, cmd, args):
+    def handle_fact(self, engine, message, cmd, args):
         if cmd == 'fact':
             results = db.select('SELECT text FROM facts ORDER BY RANDOM() LIMIT 1')
             if not results:
@@ -319,7 +322,7 @@ class Facts(Command):
                 raise Exception('Недостатньо людей в базі :(')
             result = results[0][0]
             users = [u'@{}'.format(user[0]) for user in users]
-            bot.sendMessage(
+            engine.telegram.sendMessage(
                 chat_id=message.chat_id,
                 text=result.format(*users)
             )
@@ -332,7 +335,7 @@ class Facts(Command):
             if args.count('{}') > 3:
                 raise Exception('В факті має бути принаймні одна і не більше трьох пар фігурних дужок - "{}".')
             self.db.execute('INSERT INTO facts(author, text) VALUES("{}", ?)'.format(message.from_user.username), (args.strip(),))
-            bot.sendMessage(
+            engine.telegram.sendMessage(
                 chat_id=message.chat_id,
                 text='Факт додано!'
             )
@@ -341,7 +344,7 @@ class Facts(Command):
 
 
 class PornRoll(Command):
-    def handle_redroll(self, bot, message, cmd, args):
+    def handle_redroll(self, engine, message, cmd, args):
         self.throttle(2)
 
         attempts = 0
@@ -363,12 +366,12 @@ class PornRoll(Command):
 
                 video_title = re.findall('videoTitle: "([^"]+)"', data)
                 video_title = video_title[0].replace('\\/', '/')
-                bot.sendPhoto(chat_id=message.chat_id, photo=cover_url, caption='{}: {}'.format(video_title, url))
+                engine.telegram.sendPhoto(chat_id=message.chat_id, photo=cover_url, caption='{}: {}'.format(video_title, url))
                 return True
 
             attempts += 1
 
-    def handle_xroll(self, bot, message, cmd, args):
+    def handle_xroll(self, engine, message, cmd, args):
         self.throttle(2)
 
         attempts = 0
@@ -400,7 +403,7 @@ class PornRoll(Command):
 
                 duration = block.find('span', {'class': ['duration']}).text
 
-                bot.sendPhoto(
+                engine.telegram.sendPhoto(
                     chat_id=message.chat_id,
                     photo=cover_url,
                     caption='{} {}: {}'.format(
@@ -415,10 +418,10 @@ class PornRoll(Command):
 
 
 class Stars(Command):
-    def handle_stars(self, bot, message, cmd, args):
+    def handle_stars(self, engine, message, cmd, args):
         if cmd == 'star':
             slug, name, video_count, poster_url = stars.select('SELECT * FROM stars ORDER BY RANDOM() LIMIT 1')[0]
-            bot.sendPhoto(
+            engine.telegram.sendPhoto(
                 chat_id=message.chat_id,
                 photo=poster_url,
                 caption='{} ({} videos): {}'.format(
@@ -431,8 +434,8 @@ class Stars(Command):
 
 
 class BarrelRollHandler(Command):
-    def handle_barrelroll(self, bot, message, cmd, args):
+    def handle_barrelroll(self, engine, message, cmd, args):
         if cmd == 'barrelroll':
             self.throttle(30)
-            bot.sendAudio(chat_id=message.chat_id, audio=open('./res/roll.mp3', 'rb'), title='Do the barrel roll!')
+            engine.telegram.sendAudio(chat_id=message.chat_id, audio=open('./res/roll.mp3', 'rb'), title='Do the barrel roll!')
             return True
