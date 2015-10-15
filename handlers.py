@@ -221,6 +221,9 @@ class Stats(Command):
         if not isinstance(message.chat, telegram.GroupChat):
             return
 
+        if not message.from_user.username:
+            return
+
         result = self.db.select('SELECT * FROM stats WHERE username = "{}"'.format(message.from_user.username))
         if not result:
             self.db.execute('INSERT INTO stats(username, message_count) VALUES("{}", {})'.format(
