@@ -2,3 +2,4 @@ mechanize
 telegram
 python-telegram-bot
 BeautifulSoup4
+gevent

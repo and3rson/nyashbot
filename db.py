@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 import sqlite3
+import json
 
 
 class DB(object):
@@ -32,3 +33,35 @@ class DB(object):
 
 db = DB('./db.sqlite')
 stars = DB('./stars.sqlite')
+
+
+def get_var(key, default=None):
+    try:
+        f = open('vars.db', 'r')
+        data = json.loads(f.read())
+        f.close()
+    except IOError:
+        f = open('vars.db', 'w')
+        f.write('{}')
+        f.close()
+        data = dict()
+
+    return data.get(key, default)
+
+
+def set_var(key, value):
+    try:
+        f = open('vars.db', 'r')
+        data = json.loads(f.read())
+        f.close()
+    except IOError:
+        f = open('vars.db', 'w')
+        f.write('{}')
+        f.close()
+        data = dict()
+
+    data[key] = value
+
+    f = open('vars.db', 'w')
+    f.write(json.dumps(data))
+    f.close()

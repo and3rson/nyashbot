@@ -13,6 +13,7 @@ import sys
 import telegram
 import re
 import handlers
+import tasks
 
 try:
     import settings
@@ -41,6 +42,7 @@ class Bot(object):
     def handle_update(self, update):
         message = update.message
         match = re.findall('^/([a-zA-Z_0-9]+)(\s+(.+$))?', message.text.strip())
+        print(message.chat_id)
         if match:
             match = match[0]
             cmd = match[0].lower()
@@ -83,5 +85,7 @@ bot.add_handlers(
     handlers.DotaRandom(), handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(),
     handlers.Stars(), handlers.BarrelRollHandler()
 )
+
+tasks.NineGagPoster(bot)
 
 bot.loop()
