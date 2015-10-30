@@ -14,6 +14,7 @@ from db import db, stars
 import json
 from HTMLParser import HTMLParser
 import math
+import settings
 
 
 class MLStripper(HTMLParser):
@@ -442,3 +443,11 @@ class BarrelRollHandler(Command):
             self.throttle(30)
             engine.telegram.sendAudio(chat_id=message.chat_id, audio=open('./res/roll.mp3', 'rb'), title='Do the barrel roll!')
             return True
+
+
+class AdminHandler(Command):
+    def handle_say_admin(self, engine, message, cmd, args):
+        engine.telegram.sendMessage(
+            chat_id=settings.CHAT_ID,
+            text=args
+        )
