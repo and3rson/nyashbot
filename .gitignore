@@ -4,3 +4,4 @@
 *.sqlite
 *.db
 /settings.py
+/htmlcov

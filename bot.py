@@ -74,18 +74,19 @@ class Bot(object):
         self.terminated = True
 
 
-bot = Bot()
-try:
-    assert int(os.environ['NO_STATS']) == 1
-    print('Stats disabled')
-except (KeyError, ValueError, TypeError, AssertionError) as e:
-    bot.add_handlers(handlers.Stats())
-bot.add_handlers(
-    handlers.GenericHandler(), handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(),
-    handlers.DotaRandom(), handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(),
-    handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler()
-)
+if __name__ == '__main__':
+    bot = Bot()
+    try:
+        assert int(os.environ['NO_STATS']) == 1
+        print('Stats disabled')
+    except (KeyError, ValueError, TypeError, AssertionError) as e:
+        bot.add_handlers(handlers.Stats())
+    bot.add_handlers(
+        handlers.GenericHandler(), handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(),
+        handlers.DotaRandom(), handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(),
+        handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler()
+    )
 
-tasks.NineGagPoster(bot)
+    tasks.NineGagPoster(bot)
 
-bot.loop()
+    bot.loop()
