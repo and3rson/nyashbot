@@ -93,7 +93,8 @@ if __name__ == '__main__':
     bot.add_handlers(
         handlers.GenericHandler(), handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(),
         handlers.DotaRandom(), handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(),
-        handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler(), handlers.VKAudioHandler()
+        handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler(), handlers.VKAudioHandler(),
+        handlers.TitsBoobsHelper()
     )
 
     # tasks.NineGagPoster(bot)

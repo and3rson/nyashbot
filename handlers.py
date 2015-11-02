@@ -145,6 +145,27 @@ class GoogleHandler(Command):
     handle_tits = handle_show
 
 
+class TitsBoobsHelper(Command):
+    def handle_boobs(self, engine, message, cmd, args):
+        return self.get('boobs', engine, message, cmd, args)
+
+    def handle_butts(self, engine, message, cmd, args):
+        return self.get('butts', engine, message, cmd, args)
+
+    def get(self, source, engine, message, cmd, args):
+        engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.TYPING)
+
+        response = urllib2.urlopen('http://api.o{}.ru/noise/1'.format(source))
+        data = json.loads(response.read())[0]
+
+        engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.UPLOAD_PHOTO)
+
+        engine.telegram.sendPhoto(chat_id=message.chat_id, photo='http://media.o{}.ru/{}'.format(source, data['preview'].replace('_preview', '')))
+
+    handle_boob = handle_boobs
+    handle_butt = handle_butts
+
+
 class FooHandler(Command):
     def handle_foo(self, engine, message, cmd, args):
         engine.telegram.sendMessage(chat_id=message.chat_id, text='Bar')
