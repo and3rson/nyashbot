@@ -3,7 +3,7 @@ def test_syntax():
     import db
     import handlers
     import ninegag
-    import settings
+    import configurator
     import tasks
 
 
