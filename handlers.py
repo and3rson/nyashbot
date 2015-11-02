@@ -340,7 +340,7 @@ class Facts(Command):
                 chat_id=message.chat_id,
                 text='Всі факти:\n\n' + '\n'.join(
                     [
-                        '@{}'.format(row[0])
+                        u'{}'.format(row[0])
                         for row
                         in results
                         ]
@@ -362,6 +362,7 @@ class Facts(Command):
             )
 
     handle_addfact = handle_fact
+    handle_factlist = handle_fact
 
 
 class PornRoll(Command):
