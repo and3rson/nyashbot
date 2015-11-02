@@ -338,7 +338,7 @@ class Facts(Command):
             
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
-                text='Всі факти:\n\n' + '\n'.join(
+                text=u'Всі факти:\n\n' + '\n'.join(
                     [
                         u'{}'.format(row[0])
                         for row
