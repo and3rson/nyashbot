@@ -1,7 +1,7 @@
 from gevent import Greenlet
 from ninegag import NineGag
 from db import db
-import settings
+import configurator
 
 
 class Task(object):
@@ -38,7 +38,7 @@ class NineGagPoster(Task):
 
                 if gag.kind == 'image':
                     self.engine.telegram.sendPhoto(
-                        chat_id=settings.CHAT_ID,
+                        chat_id=configurator.get('CHAT_ID'),
                         photo=gag.img['src'],
                         caption=gag.name
                     )
@@ -51,13 +51,13 @@ class NineGagPoster(Task):
                     tmp.seek(0)
 
                     self.engine.telegram.sendVideo(
-                        chat_id=settings.CHAT_ID,
+                        chat_id=configurator.get('CHAT_ID'),
                         video=tmp,
                         caption=gag.name
                     )
                 elif gag.kind == 'article':
                     self.engine.telegram.sendPhoto(
-                        chat_id=settings.CHAT_ID,
+                        chat_id=configurator.get('CHAT_ID'),
                         photo=gag.img['href'],
                         caption=u'Full version: {}'.format(gag.name)
                     )

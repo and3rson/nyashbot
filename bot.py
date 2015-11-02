@@ -3,7 +3,7 @@
 
 from __future__ import print_function
 
-from gevent import spawn, monkey, joinall
+from gevent import spawn, monkey
 
 monkey.patch_socket()
 monkey.patch_ssl()
@@ -14,11 +14,14 @@ import telegram
 import re
 import handlers
 import tasks
+import configurator
 
 try:
-    import settings
+    import settings as settings_test
 except ImportError:
-    sys.stdout.write("Please create settings.py file this code:\n\nTOKEN = '<YOUR_TOKEN>'\n\n")
+    sys.stdout.write(
+        "Please create settings.py file this code:\n\nTOKEN = '<YOUR_TOKEN>'\nCHAT_ID = <CHAT_NUMERIC_ID>\n\n"
+    )
     sys.exit(1)
 
 
@@ -29,7 +32,7 @@ class Scheduler(object):
 
 class Bot(object):
     def __init__(self):
-        self.telegram = telegram.Bot(token=settings.TOKEN)
+        self.telegram = telegram.Bot(token=configurator.get('TOKEN'))
         self.initial = True
         self.id = 0
         self.handlers = []

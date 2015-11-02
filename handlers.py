@@ -14,7 +14,7 @@ from db import db, stars
 import json
 from HTMLParser import HTMLParser
 import math
-import settings
+import configurator
 
 
 class MLStripper(HTMLParser):
@@ -448,6 +448,6 @@ class BarrelRollHandler(Command):
 class AdminHandler(Command):
     def handle_say_admin(self, engine, message, cmd, args):
         engine.telegram.sendMessage(
-            chat_id=settings.CHAT_ID,
+            chat_id=configurator.get('CHAT_ID'),
             text=args
         )
