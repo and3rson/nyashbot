@@ -1,6 +1,8 @@
 # coding: utf-8
 
 from __future__ import print_function
+import os
+import urllib
 
 import telegram
 import mechanize
@@ -15,6 +17,8 @@ import json
 from HTMLParser import HTMLParser
 import math
 import configurator
+import vk
+from random import choice, random
 
 
 class MLStripper(HTMLParser):
@@ -469,3 +473,73 @@ class AdminHandler(Command):
             chat_id=configurator.get('CHAT_ID'),
             text=args
         )
+
+
+class VKAudioHandler(Command):
+    def __init__(self):
+        self.busy = False
+        self.vkapi = vk.api
+        print('Trying to authorize at VK...')
+        if self.vkapi.log_in(
+            configurator.get('VK_LOGIN'),
+            configurator.get('VK_PASS'),
+            configurator.get('VK_APP_ID'),
+            'audio'
+        ):
+            print('VK auth succeeded!')
+        else:
+            print('VK auth failed.')
+
+    def handle_music(self, engine, message, cmd, args, roll=False):
+        if self.busy:
+            raise Exception('Я зайнята, дайте мені дозалити поточний файл!')
+
+        engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.TYPING)
+
+        self.busy = True
+        # self.throttle(5)
+
+        if len(args.strip()) == 0:
+            raise Exception('Введіть, що собсно шукати.')
+        result = self.vkapi.request('audio.search', q=args, v=5.37)
+
+        data = result['response']
+        if not data['count']:
+            raise Exception('Нічого не знайдено :(')
+
+        if roll:
+            first = choice(data['items'])
+        else:
+            first = data['items'][0]
+
+        title = u'{} - {} ({}:{})'.format(
+            first['artist'],
+            first['title'],
+            first['duration'] / 60,
+            str(first['duration'] % 60).rjust(2, '0')
+        )
+
+        engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.UPLOAD_AUDIO)
+
+        response = urllib.urlopen(first['url'])
+        fname = '/tmp/vk-{}.mp3'.format(str(int(random() * 1000000)))
+        f = open(fname, 'wb')
+        f.write(response.read())
+        f.close()
+
+        f = open(fname, 'rb')
+
+        engine.telegram.sendAudio(chat_id=message.chat_id, audio=f, title=title)
+        # first['url']
+
+        os.remove(fname)
+
+        self.busy = False
+
+        # engine.telegram.sendMessage(
+        #     chat_id=message.chat_id,
+        #     text=title
+        # )
+
+    def handle_musicroll(self, engine, message, cmd, args):
+        return self.handle_music(engine, message, cmd, args, True)

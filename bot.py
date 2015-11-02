@@ -73,6 +73,9 @@ class Bot(object):
                         self.handle_update(update)
                     self.id = max(self.id, update.update_id + 1)
                 self.initial = False
+            except KeyboardInterrupt:
+                self.terminated = True
+                print('Bye!')
             except:
                 traceback.print_exc()
 
@@ -90,7 +93,7 @@ if __name__ == '__main__':
     bot.add_handlers(
         handlers.GenericHandler(), handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(),
         handlers.DotaRandom(), handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(),
-        handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler()
+        handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler(), handlers.VKAudioHandler()
     )
 
     # tasks.NineGagPoster(bot)
