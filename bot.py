@@ -10,8 +10,9 @@ monkey.patch_ssl()
 
 import os
 import sys
-import telegram
 import re
+import traceback
+import telegram
 import handlers
 import tasks
 import configurator
@@ -44,7 +45,7 @@ class Bot(object):
     def handle_update(self, update):
         message = update.message
         match = re.findall('^/([a-zA-Z_0-9]+)(\s+(.+$))?', message.text.strip())
-        print(message.chat_id)
+
         if match:
             match = match[0]
             cmd = match[0].lower()
@@ -62,15 +63,18 @@ class Bot(object):
 
     def loop(self):
         while not self.terminated:
-            if not self.initial:
-                updates = self.telegram.getUpdates(timeout=5, offset=self.id)
-            else:
-                updates = self.telegram.getUpdates(timeout=0, offset=self.id)
-            for update in updates:
+            try:
                 if not self.initial:
-                    self.handle_update(update)
-                self.id = max(self.id, update.update_id + 1)
-            self.initial = False
+                    updates = self.telegram.getUpdates(timeout=5, offset=self.id)
+                else:
+                    updates = self.telegram.getUpdates(timeout=0, offset=self.id)
+                for update in updates:
+                    if not self.initial:
+                        self.handle_update(update)
+                    self.id = max(self.id, update.update_id + 1)
+                self.initial = False
+            except:
+                traceback.print_exc()
 
     def stop(self):
         self.terminated = True
