@@ -331,6 +331,23 @@ class Facts(Command):
                 text=result.format(*users)
             )
             return True
+        elif cmd == 'factlist':
+            results = db.select('SELECT text FROM facts')
+            if not results:
+                raise Exception('В базі ще немає жодного факту :(')
+            
+            engine.telegram.sendMessage(
+                chat_id=message.chat_id,
+                text='Всі факти:\n\n' + '\n'.join(
+                    [
+                        u'{}'.format(row[0])
+                        for row
+                        in results
+                        ]
+                ),
+                parse_mode='Markdown'
+            )
+            return True
         elif cmd == 'addfact':
             if len(args.strip()) == 0:
                 raise Exception('Введіть, що саме додати! Наприклад: "/addfact {} любить фапати на аніме.".')
@@ -345,6 +362,7 @@ class Facts(Command):
             )
 
     handle_addfact = handle_fact
+    handle_factlist = handle_fact
 
 
 class PornRoll(Command):
