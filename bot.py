@@ -22,7 +22,6 @@ except ImportError:
     sys.stdout.write(
         "Please create settings.py file this code:\n\nTOKEN = '<YOUR_TOKEN>'\nCHAT_ID = <CHAT_NUMERIC_ID>\n\n"
     )
-    sys.exit(1)
 
 
 class Scheduler(object):
