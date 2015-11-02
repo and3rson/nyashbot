@@ -93,6 +93,6 @@ if __name__ == '__main__':
         handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler()
     )
 
-    tasks.NineGagPoster(bot)
+    # tasks.NineGagPoster(bot)
 
     bot.loop()
