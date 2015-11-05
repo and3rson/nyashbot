@@ -514,53 +514,59 @@ class VKAudioHandler(Command):
     def handle_music(self, engine, message, cmd, args, roll=False):
         if self.busy:
             raise Exception('Я зайнята, дайте мені дозалити поточний файл!')
-
-        engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.TYPING)
-
         self.busy = True
+
+        try:
+
+            engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.TYPING)
+
         # self.throttle(5)
 
-        if len(args.strip()) == 0:
-            raise Exception('Введіть, що собсно шукати.')
-        result = self.vkapi.request('audio.search', q=args, v=5.37)
+            if len(args.strip()) == 0:
+                raise Exception('Введіть, що собсно шукати.')
+            result = self.vkapi.request('audio.search', q=args, v=5.37)
 
-        data = result['response']
-        if not data['count']:
-            raise Exception('Нічого не знайдено :(')
+            data = result['response']
+            if not data['count']:
+                raise Exception('Нічого не знайдено :(')
 
-        if roll:
-            first = choice(data['items'])
-        else:
-            first = data['items'][0]
+            if roll:
+                first = choice(data['items'])
+            else:
+                first = data['items'][0]
 
-        title = u'{} - {} ({}:{})'.format(
-            first['artist'],
-            first['title'],
-            first['duration'] / 60,
-            str(first['duration'] % 60).rjust(2, '0')
-        )
+            title = u'{} - {} ({}:{})'.format(
+                first['artist'],
+                first['title'],
+                first['duration'] / 60,
+                str(first['duration'] % 60).rjust(2, '0')
+            )
 
-        engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.UPLOAD_AUDIO)
+            engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.UPLOAD_AUDIO)
 
-        response = urllib.urlopen(first['url'])
-        fname = '/tmp/vk-{}.mp3'.format(str(int(random() * 1000000)))
-        f = open(fname, 'wb')
-        f.write(response.read())
-        f.close()
+            response = urllib.urlopen(first['url'])
+            fname = '/tmp/vk-{}.mp3'.format(str(int(random() * 1000000)))
+            f = open(fname, 'wb')
+            f.write(response.read())
+            f.close()
 
-        f = open(fname, 'rb')
+            f = open(fname, 'rb')
 
-        engine.telegram.sendAudio(chat_id=message.chat_id, audio=f, title=title)
-        # first['url']
+            engine.telegram.sendAudio(chat_id=message.chat_id, audio=f, title=title)
+            # first['url']
 
-        os.remove(fname)
+            os.remove(fname)
 
-        self.busy = False
+            self.busy = False
 
-        # engine.telegram.sendMessage(
-        #     chat_id=message.chat_id,
-        #     text=title
-        # )
+            # engine.telegram.sendMessage(
+            #     chat_id=message.chat_id,
+            #     text=title
+            # )
+        except:
+            # Prevent deadlock
+            self.busy = False
+            raise
 
     def handle_musicroll(self, engine, message, cmd, args):
         return self.handle_music(engine, message, cmd, args, True)
