@@ -20,6 +20,7 @@ import configurator
 import vk
 from random import choice, random
 import datetime
+import traceback
 
 
 class MLStripper(HTMLParser):
@@ -79,6 +80,7 @@ class Command(object):
         try:
             getattr(self, method_name)(engine, message, cmd, args)
         except Exception as e:
+            traceback.print_exc()
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
                 text='**{}**: {}'.format(str(e.__class__.__name__), str(e)),
@@ -603,7 +605,7 @@ class VKAudioHandler(Command):
 
             f = open(fname, 'rb')
 
-            engine.telegram.sendAudio(chat_id=message.chat_id, audio=f, title=title)
+            engine.telegram.sendAudio(chat_id=message.chat_id, audio=f, title=title.encode('utf-8'))
 
             os.remove(fname)
 

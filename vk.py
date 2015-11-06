@@ -79,6 +79,12 @@ class VKApi(object):
         )
 
         data.update(kwargs)
+        for key, value in data.items():
+            if isinstance(value, unicode):
+                data[key] = value.encode('utf-8')
+
+        print data
+        print urllib.urlencode(data)
 
         url = VKApi.URL + '/method/{}'.format(method) + '?' + urllib.urlencode(data)
         response = urllib2.urlopen(url)
