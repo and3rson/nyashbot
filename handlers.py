@@ -228,7 +228,7 @@ class Stats(Command):
                 chat_id=message.chat_id,
                 text=u'Топ-5 спамерів:\n\n' + '\n'.join(
                     [
-                        '@{} (**{}** повідомлень)'.format(row[1], row[2])
+                        u'@{} (**{}** повідомлень)'.format(row[1], row[2])
                         for row
                         in result
                         ]
