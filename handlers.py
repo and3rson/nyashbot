@@ -45,7 +45,9 @@ def translate(src, dest, text):
     url = PATTERN.format(src=src, dest=dest, text=text.replace(' ', '+'))
 
     browser = mechanize.Browser()
-    browser.addheaders = [('User-Agent', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)')]
+    browser.addheaders = [
+        ('User-Agent', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)')
+    ]
     browser.set_handle_robots(False)
     browser.open('https://translate.google.com')
     browser.select_form(nr=0)
@@ -65,7 +67,11 @@ class Command(object):
         now = time.time()
         time_left = self.last_call + amount - now
         if time_left > 0:
-            raise Exception('Зачекайте ще {} секунд(и), перш ніж викликати цю команду знов.'.format(int(math.ceil(time_left))))
+            raise Exception(
+                'Зачекайте ще {} секунд(и), перш ніж викликати цю команду знов.'.format(
+                    int(math.ceil(time_left))
+                )
+            )
         self.last_call = time.time()
 
     def handle(self, engine, message, cmd, args):
@@ -90,11 +96,12 @@ class GoogleHandler(Command):
     P1 = ['', '', '', '', 'sexy', 'nice', 'girl', 'big', 'сочные', 'большие', 'женские']
     P2 = ['tits', 'boobs', 'boobies', 'сиськи', 'сисечки', 'титьки']
 
-
     def __init__(self):
         self.browser = mechanize.Browser()
         # self.browser.addheaders = [('User-Agent', 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 5.1)')]
-        self.browser.addheaders = [('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1')]
+        self.browser.addheaders = [
+            ('User-Agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1')
+        ]
         self.browser.set_handle_robots(False)
 
     def handle_show(self, engine, message, cmd, args):
@@ -125,10 +132,11 @@ class GoogleHandler(Command):
                 if attempt == 3:
                     raise Exception('Я пробувала знайти картинки декілька разів, але не вдалося :( спробуй ще раз!')
                 try:
-                    response = self.browser.open(u'https://ajax.googleapis.com/ajax/services/search/images?v=1.0&{}&start={}'.format(
-                        urlencode(dict(q=args)),
-                        start
-                    ))
+                    response = self.browser.open(
+                        u'https://ajax.googleapis.com/ajax/services/search/images?v=1.0&{}&start={}'.format(
+                            urlencode(dict(q=args)),
+                            start
+                        ))
                     data = response.read()
                     response = json.loads(data)
                     results = response['responseData']['results']
@@ -161,7 +169,12 @@ class TitsBoobsHelper(Command):
 
         engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.UPLOAD_PHOTO)
 
-        engine.telegram.sendPhoto(chat_id=message.chat_id, photo='http://media.o{}.ru/{}'.format(source, data['preview'].replace('_preview', '')))
+        engine.telegram.sendPhoto(
+            chat_id=message.chat_id,
+            photo='http://media.o{}.ru/{}'.format(
+                source, data['preview'].replace('_preview', '')
+            )
+        )
 
     handle_boob = handle_boobs
     handle_butt = handle_butts
@@ -281,6 +294,7 @@ class Stats(Command):
             self.start_time,
         )
 
+
 class Fortune(Command):
     def handle_fortune(self, engine, message, cmd, args):
         if cmd == 'fortune':
@@ -290,7 +304,15 @@ class Fortune(Command):
             browser.addheaders = [('User-Agent', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)')]
             browser.set_handle_robots(False)
             response = browser.open('https://helloacm.com/api/fortune/')
-            text = response.read().replace('\\t', '').replace('\\n', '\n').replace('\\"', '"').replace('\\\'', '\'').strip('"')
+            text = response.read().replace(
+                '\\t', ''
+            ).replace(
+                '\\n', '\n'
+            ).replace(
+                '\\"', '"'
+            ).replace(
+                '\\\'', '\''
+            ).strip('"')
 
             translated = u'- {}: {}'.format(
                 message.from_user.username,
@@ -379,7 +401,7 @@ class Facts(Command):
             results = db.select('SELECT text FROM facts')
             if not results:
                 raise Exception('В базі ще немає жодного факту :(')
-            
+
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
                 text=u'Всі факти:\n\n' + '\n'.join(
@@ -399,7 +421,10 @@ class Facts(Command):
                 raise Exception('В факті має бути принаймні одна і не більше п’яти пар фігурних дужок - "{}".')
             if args.count('{}') > 3:
                 raise Exception('В факті має бути принаймні одна і не більше трьох пар фігурних дужок - "{}".')
-            self.db.execute('INSERT INTO facts(author, text) VALUES("{}", ?)'.format(message.from_user.username), (args.strip(),))
+            self.db.execute(
+                'INSERT INTO facts(author, text) VALUES("{}", ?)'.format(message.from_user.username),
+                (args.strip(),)
+            )
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
                 text='Факт додано!'
@@ -432,7 +457,11 @@ class PornRoll(Command):
 
                 video_title = re.findall('videoTitle: "([^"]+)"', data)
                 video_title = video_title[0].replace('\\/', '/')
-                engine.telegram.sendPhoto(chat_id=message.chat_id, photo=cover_url, caption='{}: {}'.format(video_title, url))
+                engine.telegram.sendPhoto(
+                    chat_id=message.chat_id,
+                    photo=cover_url,
+                    caption='{}: {}'.format(video_title, url)
+                )
                 return True
 
             attempts += 1
@@ -503,7 +532,11 @@ class BarrelRollHandler(Command):
     def handle_barrelroll(self, engine, message, cmd, args):
         if cmd == 'barrelroll':
             self.throttle(30)
-            engine.telegram.sendAudio(chat_id=message.chat_id, audio=open('./res/roll.mp3', 'rb'), title='Do the barrel roll!')
+            engine.telegram.sendAudio(
+                chat_id=message.chat_id,
+                audio=open('./res/roll.mp3', 'rb'),
+                title='Do the barrel roll!'
+            )
             return True
 
 
@@ -520,12 +553,13 @@ class VKAudioHandler(Command):
         self.busy = False
         self.vkapi = vk.api
         print('Trying to authorize at VK...')
-        if self.vkapi.log_in(
+        login_result = self.vkapi.log_in(
             configurator.get('VK_LOGIN'),
             configurator.get('VK_PASS'),
             configurator.get('VK_APP_ID'),
             'audio'
-        ):
+        )
+        if login_result:
             print('VK auth succeeded!')
         else:
             print('VK auth failed.')
@@ -538,8 +572,6 @@ class VKAudioHandler(Command):
         try:
 
             engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.TYPING)
-
-        # self.throttle(5)
 
             if len(args.strip()) == 0:
                 raise Exception('Введіть, що собсно шукати.')
@@ -572,16 +604,10 @@ class VKAudioHandler(Command):
             f = open(fname, 'rb')
 
             engine.telegram.sendAudio(chat_id=message.chat_id, audio=f, title=title)
-            # first['url']
 
             os.remove(fname)
 
             self.busy = False
-
-            # engine.telegram.sendMessage(
-            #     chat_id=message.chat_id,
-            #     text=title
-            # )
         except:
             # Prevent deadlock
             self.busy = False
