@@ -226,13 +226,13 @@ class Stats(Command):
             stars_count = stars.select('SELECT COUNT(*) FROM stars')
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
-                text='Топ-5 спамерів:\n\n' + '\n'.join(
+                text=u'Топ-5 спамерів:\n\n' + '\n'.join(
                     [
                         '@{} (**{}** повідомлень)'.format(row[1], row[2])
                         for row
                         in result
                         ]
-                ) + '\n\nВ базі **{}** юзер(ів) і **{}** упоротий(х) факт(ів).\nПроіндексовано **{}** порнозірок з XVideos.\n\nКрім того, доводимо до вашого відома, що {}.\n\n{}'.format(
+                ) + u'\n\nВ базі **{}** юзер(ів) і **{}** упоротий(х) факт(ів).\nПроіндексовано **{}** порнозірок з XVideos.\n\nКрім того, доводимо до вашого відома, що {}.\n\n{}'.format(
                     counts[0][0],
                     counts[1][0],
                     stars_count[0][0],
@@ -275,7 +275,7 @@ class Stats(Command):
         return True
 
     def get_version(self):
-        return u'- Версія бота: {} ({})\nОстанній перезапуск бота: {}'.format(
+        return u'- Версія бота: {} ({})\n- Останній перезапуск бота: {}'.format(
             self.version,
             self.last_commit,
             self.start_time,
