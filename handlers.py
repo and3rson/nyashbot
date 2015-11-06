@@ -268,7 +268,7 @@ class Stats(Command):
 
     def handle_version(self, engine, message, cmd, args):
         engine.telegram.sendMessage(
-            chad_id=message.chat_id,
+            chat_id=message.chat_id,
             text=self.get_version(),
             parse_mode='Markdown'
         )
