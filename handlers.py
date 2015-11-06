@@ -19,6 +19,7 @@ import math
 import configurator
 import vk
 from random import choice, random
+import datetime
 
 
 class MLStripper(HTMLParser):
@@ -203,6 +204,9 @@ class Stats(Command):
             ('message_count', 'int'),
         ])
 
+        self.start_time = datetime.datetime.now()
+        self.version = os.popen('git rev-parse HEAD').read().strip()
+        self.last_commit = os.popen('git log --pretty=format:%cd').read().split('\n')[0]
 
     def get_fact(self):
         results = db.select('SELECT text FROM facts ORDER BY RANDOM() LIMIT 1')
@@ -228,11 +232,12 @@ class Stats(Command):
                         for row
                         in result
                         ]
-                ) + '\n\nВ базі **{}** юзер(ів) і **{}** упоротий(х) факт(ів).\nПроіндексовано **{}** порнозірок з XVideos.\nКрім того, доводимо до вашого відома, що {}.'.format(
+                ) + '\n\nВ базі **{}** юзер(ів) і **{}** упоротий(х) факт(ів).\nПроіндексовано **{}** порнозірок з XVideos.\n\nКрім того, доводимо до вашого відома, що {}.\n\n{}'.format(
                     counts[0][0],
                     counts[1][0],
                     stars_count[0][0],
-                    self.get_fact().encode('utf-8')
+                    self.get_fact().encode('utf-8'),
+                    self.get_version()
                 ),
                 parse_mode='Markdown'
             )
@@ -261,6 +266,20 @@ class Stats(Command):
                 message.from_user.username
             ))
 
+    def handle_version(self, engine, message, cmd, args):
+        engine.telegram.sendMessage(
+            chad_it=message.chat_id,
+            text=self.get_version(),
+            parse_mode='Markdown'
+        )
+        return True
+
+    def get_version(self):
+        return u'- Версія бота: {} ({})\nОстанній перезапуск бота: {}'.format(
+            self.version,
+            self.last_commit,
+            self.start_time,
+        )
 
 class Fortune(Command):
     def handle_fortune(self, engine, message, cmd, args):
@@ -273,7 +292,7 @@ class Fortune(Command):
             response = browser.open('https://helloacm.com/api/fortune/')
             text = response.read().replace('\\t', '').replace('\\n', '\n').replace('\\"', '"').replace('\\\'', '\'').strip('"')
 
-            translated = u'@{}: {}'.format(
+            translated = u'- {}: {}'.format(
                 message.from_user.username,
                 '\n'.join([translate('en', 'uk', line) for line in text.split('\n')])
             )
