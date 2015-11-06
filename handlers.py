@@ -515,19 +515,18 @@ class PornRoll(Command):
 
 
 class Stars(Command):
-    def handle_stars(self, engine, message, cmd, args):
-        if cmd == 'star':
-            slug, name, video_count, poster_url = stars.select('SELECT * FROM stars ORDER BY RANDOM() LIMIT 1')[0]
-            engine.telegram.sendPhoto(
-                chat_id=message.chat_id,
-                photo=poster_url,
-                caption='{} ({} videos): {}'.format(
-                    name,
-                    video_count,
-                    'http://www.xvideos.com/profiles/{}#_tabVideos,videos-best'.format(slug)
-                )
+    def handle_star(self, engine, message, cmd, args):
+        slug, name, video_count, poster_url = stars.select('SELECT * FROM stars ORDER BY RANDOM() LIMIT 1')[0]
+        engine.telegram.sendPhoto(
+            chat_id=message.chat_id,
+            photo=poster_url,
+            caption='{} ({} videos): {}'.format(
+                name,
+                video_count,
+                'http://www.xvideos.com/profiles/{}#_tabVideos,videos-best'.format(slug)
             )
-            return True
+        )
+        return True
 
 
 class BarrelRollHandler(Command):
