@@ -236,7 +236,7 @@ class Stats(Command):
                     counts[0][0],
                     counts[1][0],
                     stars_count[0][0],
-                    self.get_fact().encode('utf-8'),
+                    self.get_fact(),
                     self.get_version()
                 ),
                 parse_mode='Markdown'
