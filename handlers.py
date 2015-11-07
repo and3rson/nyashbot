@@ -629,12 +629,13 @@ class VKAudioHandler(Command):
 class ResponseHandler(Command):
     # BQADBAADvAQAApv7sgAB-a10wug0trsC - OAGF
     # BQADBAADbAADXSupASBF4k8DAAHWowI - Harold
-    # BQADAgADGgADVaMOAAFpsDjXHc8RCwI - 322
+    # BQADAgADGgADVaMOAAFpsDjXHc8RCwI - Kappa
     # BQADAgADIQADVaMOAAE-mu2vH2C0RAI - Bratishka!
     # BQADAQADuQMAAiMzHAABz0nPM08joi8C - Hitler
     # BQADAgADIAADS0sKBf4vXb9s-tpQAg - Gaben
     # BQADAQADXgUAAiBWmALK7Xfe8O0gKAI - Just do it!
     # BQADAgADDAADj4_IB1ei99O6HjlzAg - Overlort
+    # BQADAgADFwADEWUuCAI773bfgwSoAg - 322
     def match(self, string, patterns):
         string = string.lower()
         for pattern in patterns:
@@ -677,4 +678,9 @@ class ResponseHandler(Command):
             engine.telegram.sendSticker(
                 chat_id=message.chat_id,
                 sticker='BQADAgADDAADj4_IB1ei99O6HjlzAg'
+            )
+        elif self.match(message.text, ['322']):
+            engine.telegram.sendSticker(
+                chat_id=message.chat_id,
+                sticker='BQADAgADFwADEWUuCAI773bfgwSoAg'
             )
