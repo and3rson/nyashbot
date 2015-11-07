@@ -669,7 +669,7 @@ class ResponseHandler(Command):
                 chat_id=message.chat_id,
                 sticker='BQADAgADIAADS0sKBf4vXb9s-tpQAg'
             )
-        elif self.match(message.text, ['do it', u'го!', u'го1', u'гоооо']):
+        elif self.match(message.text, ['do it', 'go!', 'goo', u'го!', u'го1', u'гоо']):
             engine.telegram.sendSticker(
                 chat_id=message.chat_id,
                 sticker='BQADAQADXgUAAiBWmALK7Xfe8O0gKAI'
