@@ -58,7 +58,7 @@ class Bot(object):
         else:
             for handler in self.handlers:
                 if hasattr(handler, 'handle_message'):
-                    if handler.handle_message(self.telegram, message):
+                    if handler.handle_message(self, message):
                         break
 
     def loop(self):
@@ -94,7 +94,7 @@ if __name__ == '__main__':
         handlers.GenericHandler(), handlers.GoogleHandler(), handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(),
         handlers.DotaRandom(), handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(),
         handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler(), handlers.VKAudioHandler(),
-        handlers.TitsBoobsHelper()
+        handlers.TitsBoobsHandler(), handlers.ResponseHandler()
     )
 
     # tasks.NineGagPoster(bot)

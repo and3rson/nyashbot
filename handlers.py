@@ -156,7 +156,7 @@ class GoogleHandler(Command):
     handle_tits = handle_show
 
 
-class TitsBoobsHelper(Command):
+class TitsBoobsHandler(Command):
     def handle_boobs(self, engine, message, cmd, args):
         return self.get('boobs', engine, message, cmd, args)
 
@@ -548,6 +548,14 @@ class AdminHandler(Command):
             text=args
         )
 
+    def handle_message(self, engine, message):
+        if message.chat_id > 0:
+            if message.sticker:
+                engine.telegram.sendMessage(
+                    chat_id=message.chat_id,
+                    text=str(message.sticker)
+                )
+
 
 class VKAudioHandler(Command):
     def __init__(self):
@@ -616,3 +624,57 @@ class VKAudioHandler(Command):
 
     def handle_musicroll(self, engine, message, cmd, args):
         return self.handle_music(engine, message, cmd, args, True)
+
+
+class ResponseHandler(Command):
+    # BQADBAADvAQAApv7sgAB-a10wug0trsC - OAGF
+    # BQADBAADbAADXSupASBF4k8DAAHWowI - Harold
+    # BQADAgADGgADVaMOAAFpsDjXHc8RCwI - 322
+    # BQADAgADIQADVaMOAAE-mu2vH2C0RAI - Bratishka!
+    # BQADAQADuQMAAiMzHAABz0nPM08joi8C - Hitler
+    # BQADAgADIAADS0sKBf4vXb9s-tpQAg - Gaben
+    # BQADAQADXgUAAiBWmALK7Xfe8O0gKAI - Just do it!
+    # BQADAgADDAADj4_IB1ei99O6HjlzAg - Overlort
+    def match(self, string, patterns):
+        string = string.lower()
+        for pattern in patterns:
+            if pattern.lower() in string.lower():
+                return True
+        return False
+
+    def handle_message(self, engine, message):
+        if self.match(message.text, ['))']):
+            engine.telegram.sendSticker(
+                chat_id=message.chat_id,
+                sticker='BQADBAADbAADXSupASBF4k8DAAHWowI'
+            )
+        elif self.match(message.text, ['kappa',  u'каппа']):
+            engine.telegram.sendSticker(
+                chat_id=message.chat_id,
+                sticker='BQADAgADGgADVaMOAAFpsDjXHc8RCwI'
+            )
+        elif self.match(message.text, ['bratishka', u'братішка', u'братишка']):
+            engine.telegram.sendSticker(
+                chat_id=message.chat_id,
+                sticker='BQADAgADIQADVaMOAAE-mu2vH2C0RAI'
+            )
+        elif self.match(message.text, ['1488', '14/88']):
+            engine.telegram.sendSticker(
+                chat_id=message.chat_id,
+                sticker='BQADAQADuQMAAiMzHAABz0nPM08joi8C'
+            )
+        elif self.match(message.text, ['gabe', u'гейб', u'габен']):
+            engine.telegram.sendSticker(
+                chat_id=message.chat_id,
+                sticker='BQADAgADIAADS0sKBf4vXb9s-tpQAg'
+            )
+        elif self.match(message.text, ['do it', u'го!', u'го1', u'гоооо']):
+            engine.telegram.sendSticker(
+                chat_id=message.chat_id,
+                sticker='BQADAQADXgUAAiBWmALK7Xfe8O0gKAI'
+            )
+        elif self.match(message.text, [u'підор', u'підар', 'pidor', 'pidar']):
+            engine.telegram.sendSticker(
+                chat_id=message.chat_id,
+                sticker='BQADAgADDAADj4_IB1ei99O6HjlzAg'
+            )
