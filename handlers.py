@@ -212,6 +212,21 @@ class Pasta(Command):
 
 
 class Stats(Command):
+    META = {
+        100: u'{} щойно написав своє соте повідомлення! ГЦ!',
+        228: u'в {} вжу 228 меседжів! Є-й!',
+        322: u'в {} вжу 322 меседжі! Є-й!',
+        500: u'{} щойно написав своє п`ятсоте повідомлення! ГЦ!',
+        1000: u'{} щойно написав своє тисячне повідомлення! ГЦ!',
+        1337: u'1337 повідомлень в {}! Бокал віна цьому гаспадіну!',
+        1488: u'{} щойно написав своє 1488-е повідомлення! SIGH HEIL!',
+        1990: u'{} щойно написав своє 1990-е повідомлення! ROAD TO 2K!',
+        2000: u'{} написав 2000-е повідомлення! Піздец. Зроби щось корисне :P',
+        2500: u'{} написав 2500-е повідомлення! Піздец. Зроби щось корисне :P',
+        3000: u'{} написав 3000-е повідомлення! Піздец. Зроби щось корисне :P',
+        4000: u'{} написав 4000-е повідомлення! Піздец. Зроби щось корисне :P',
+        5000: u'{} написав 5000-е повідомлення! Піздец. Зроби щось корисне :P',
+    }
     def __init__(self):
         self.db = db
         self.db.upsert('stats', [
@@ -258,12 +273,12 @@ class Stats(Command):
             )
             return True
         else:
-            self.increase(message)
+            self.increase(engine, message)
 
     def handle_message(self, engine, message):
-        self.increase(message)
+        self.increase(engine, message)
 
-    def increase(self, message):
+    def increase(self, engine, message):
         if not isinstance(message.chat, telegram.GroupChat):
             return
 
@@ -276,10 +291,21 @@ class Stats(Command):
                 message.from_user.username,
                 1
             ))
+            count = 1
         else:
             self.db.execute('UPDATE stats SET message_count = message_count + 1 WHERE username = "{}"'.format(
                 message.from_user.username
             ))
+            count = self.db.select('SELECT message_count FROM stats WHERE username = "{}"'.format(
+                message.from_user.username
+            ))[0][0]
+        congrats = Stats.META.get(int(count), None)
+        print(repr(congrats))
+        if congrats:
+            engine.telegram.sendMessage(
+                chat_id=message.chat_id,
+                text=congrats.format('@{}'.format(message.from_user.username))
+            )
 
     def handle_version(self, engine, message, cmd, args):
         engine.telegram.sendMessage(
