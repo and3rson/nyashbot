@@ -227,6 +227,15 @@ class Stats(Command):
         4000: u'{} написав 4000-е повідомлення! Піздец. Зроби щось корисне :P',
         5000: u'{} написав 5000-е повідомлення! Піздец. Зроби щось корисне :P',
     }
+
+    TITLES = (
+        u'The Boss',
+        u'Carry',
+        u'Аматор',
+        u'Сапорт',
+        u'Кур\'єр'
+    )
+
     def __init__(self):
         self.db = db
         self.db.upsert('stats', [
@@ -258,9 +267,9 @@ class Stats(Command):
                 chat_id=message.chat_id,
                 text=u'Топ-5 спамерів:\n\n' + '\n'.join(
                     [
-                        u'@{} (**{}** повідомлень)'.format(row[1], row[2])
-                        for row
-                        in result
+                        u'@{} (**{}** повідомлень) - {}'.format(row[1], row[2], Stats.TITLES[i])
+                        for i, row
+                        in enumerate(result)
                         ]
                 ) + u'\n\nВ базі **{}** юзер(ів) і **{}** упоротий(х) факт(ів).\nПроіндексовано **{}** порнозірок з XVideos.\n\nКрім того, доводимо до вашого відома, що {}.\n\n{}'.format(
                     counts[0][0],
