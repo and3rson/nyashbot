@@ -351,7 +351,7 @@ class Fortune(Command):
                 '\\\'', '\''
             ).strip('"')
 
-            translated = u'- {}: {}'.format(
+            translated = u'@{}: {}'.format(
                 message.from_user.username,
                 '\n'.join([translate('en', 'uk', line) for line in text.split('\n')])
             )

@@ -1,7 +1,8 @@
 import traceback
 from gevent import Greenlet
 from ninegag import NineGag
-from db import db
+from youtube import YouTube
+from db import db, get_var, set_var
 import configurator
 
 
@@ -68,3 +69,41 @@ class NineGagPoster(Task):
         except:
             traceback.print_exc()
             self.start_later(60)
+
+
+class YouTubeWatcher(Task):
+    def __init__(self, engine):
+        super(YouTubeWatcher, self).__init__(engine)
+
+        # db.upsert('youtube', [
+        #     ('channel', 'varchar(64)'),
+        #     ('video_id', 'varchar(64)')
+        # ])
+
+        self.yt = YouTube()
+        self.start_later(1)
+
+    def run(self):
+        channels = ('DotaCinema', 'WronchiAnimation')
+
+        for channel in channels:
+            try:
+                videos = self.yt.get_latest(channel)
+                video = videos[0]
+
+                last_video_id = get_var('youtube.{}.last_id'.format(channel), '')
+                if video.id != last_video_id:
+                    set_var('youtube.{}.last_id'.format(channel), video.id)
+                    print 'New video: {}'.format(str(video))
+
+                    self.engine.telegram.sendPhoto(
+                        chat_id=configurator.get('CHAT_ID'),
+                        photo=video.img,
+                        caption=u'{}: {}'.format(video.name, video.url)
+                    )
+
+                # match = db.select('SELECT * FROM youtube WHERE id="{}"'.format(video.id))
+            except:
+                traceback.print_exc()
+
+        self.start_later(60)
