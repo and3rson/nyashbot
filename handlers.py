@@ -21,6 +21,7 @@ import vk
 from random import choice, random
 import datetime
 import traceback
+from imgurpython import ImgurClient
 
 
 class MLStripper(HTMLParser):
@@ -141,6 +142,7 @@ class GoogleHandler(Command):
                         ))
                     data = response.read()
                     response = json.loads(data)
+                    print(response)
                     results = response['responseData']['results']
                     result = choice(results)
                     # title = urlencode(dict(d=result['title'].encode('utf-8')))[2:]
@@ -150,6 +152,8 @@ class GoogleHandler(Command):
                     return True
                     break
                 except Exception as e:
+                    print('Google error')
+                    traceback.print_exc()
                     attempt += 1
 
     handle_show1 = handle_show
@@ -158,6 +162,9 @@ class GoogleHandler(Command):
 
 class TitsBoobsHandler(Command):
     def handle_boobs(self, engine, message, cmd, args):
+        return self.get('boobs', engine, message, cmd, args)
+
+    def handle_tits(self, engine, message, cmd, args):
         return self.get('boobs', engine, message, cmd, args)
 
     def handle_butts(self, engine, message, cmd, args):
@@ -180,6 +187,25 @@ class TitsBoobsHandler(Command):
 
     handle_boob = handle_boobs
     handle_butt = handle_butts
+
+
+class RealGirlsHandler(Command):
+    def handle_realgirl(self, engine, message, cmd, args):
+        client = ImgurClient(configurator.get('IMGUR_KEY'), configurator.get('IMGUR_SECRET'))
+        engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.TYPING)
+
+        gallery = client.subreddit_gallery('realgirls', sort='new', window='all', page=int(random() * 30))
+        item = choice(gallery)
+
+        engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.UPLOAD_PHOTO)
+
+        engine.telegram.sendPhoto(
+            chat_id=message.chat_id,
+            photo=item.link,
+            caption=item.title
+        )
+
+    handle_realgirls = handle_realgirl
 
 
 class FooHandler(Command):
@@ -594,8 +620,12 @@ class AdminHandler(Command):
 
 class VKAudioHandler(Command):
     def __init__(self):
-        self.busy = False
         self.vkapi = vk.api
+        self.busy = True
+        self.login()
+        self.busy = False
+
+    def login(self):
         print('Trying to authorize at VK...')
         login_result = self.vkapi.log_in(
             configurator.get('VK_LOGIN'),
@@ -607,11 +637,15 @@ class VKAudioHandler(Command):
             print('VK auth succeeded!')
         else:
             print('VK auth failed.')
+        self.last_login = time.time()
 
     def handle_music(self, engine, message, cmd, args, roll=False):
         if self.busy:
             raise Exception('Я зайнята, дайте мені дозалити поточний файл!')
         self.busy = True
+
+        if self.last_login < time.time() - 3600:
+            self.login()
 
         try:
 
@@ -620,6 +654,8 @@ class VKAudioHandler(Command):
             if len(args.strip()) == 0:
                 raise Exception('Введіть, що собсно шукати.')
             result = self.vkapi.request('audio.search', q=args, v=5.37)
+
+            print(result)
 
             data = result['response']
             if not data['count']:
