@@ -190,11 +190,11 @@ class TitsBoobsHandler(Command):
 
 
 class RealGirlsHandler(Command):
-    def handle_realgirl(self, engine, message, cmd, args):
+    def subreddit(self, source, engine, message, cmd, args):
         engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.TYPING)
         client = ImgurClient(configurator.get('IMGUR_KEY'), configurator.get('IMGUR_SECRET'))
 
-        gallery = client.subreddit_gallery('realgirls', sort='new', window='all', page=int(random() * 30))
+        gallery = client.subreddit_gallery(source, sort='new', window='all', page=int(random() * 30))
         gallery = filter(lambda item: item.size > 0, gallery)
 
         attempt = 0
@@ -215,6 +215,12 @@ class RealGirlsHandler(Command):
         engine.telegram.sendMessage(chat_id=message.chat_id, text='Я тричі спробувала отримати картинку, але сталася якась помилка в API telegram :(')
 
         return True
+
+    def handle_realgirl(self, engine, message, cmd, args):
+        return self.subreddit('realgirl', engine, message, cmd, args)
+
+    def handle_nsfw(self, engine, message, cmd, args):
+        return self.subreddit('nsfw', engine, message, cmd, args)
 
     handle_realgirls = handle_realgirl
 
