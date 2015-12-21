@@ -620,6 +620,12 @@ class AdminHandler(Command):
 
 class VKAudioHandler(Command):
     def __init__(self):
+        self.need_captcha = False
+        self.message = None
+        self.cmd = None
+        self.args = None
+        self.roll = None
+
         self.vkapi = vk.api
         self.busy = True
         self.login()
@@ -639,21 +645,45 @@ class VKAudioHandler(Command):
             print('VK auth failed.')
         self.last_login = time.time()
 
-    def handle_music(self, engine, message, cmd, args, roll=False):
+    def handle_captcha(self, engine, message, cmd, args):
+        if not self.need_captcha:
+            raise Exception('Капчу вже не потрібно, дякую :)')
+        return self.handle_music(engine, self.message, self.cmd, self.args, roll=self.roll, captcha=cmd)
+
+    def handle_music(self, engine, message, cmd, args, roll=False, captcha=None):
         if self.busy:
             raise Exception('Я зайнята, дайте мені дозалити поточний файл!')
+        if self.need_captcha:
+            raise Exception('Не можу здійснити пошук, доки ви не розв`яжете капчу!')
         self.busy = True
 
         if self.last_login < time.time() - 3600:
             self.login()
 
         try:
-
             engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.TYPING)
 
             if len(args.strip()) == 0:
                 raise Exception('Введіть, що собсно шукати.')
-            result = self.vkapi.request('audio.search', q=args, v=5.37)
+            if captcha:
+                result = self.vkapi.request('audio.search', q=args, v=5.37, captcha_sid=self.captcha_sid, captcha_key=captcha)
+            else:
+                result = self.vkapi.request('audio.search', q=args, v=5.37)
+
+            if 'error' in result['response']:
+                self.captcha_sid = result['error']['captcha_sid']
+                engine.telegram.sendPhoto(
+                    chat_id=message.chat_id,
+                    photo=data['error']['captcha_img']
+                )
+                self.need_captcha = True
+                self.message = message
+                self.cmd = cmd
+                self.args = args
+                self.roll = roll
+                return True
+
+            self.need_captcha = False
 
             print(result)
 
