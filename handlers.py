@@ -191,19 +191,30 @@ class TitsBoobsHandler(Command):
 
 class RealGirlsHandler(Command):
     def handle_realgirl(self, engine, message, cmd, args):
-        client = ImgurClient(configurator.get('IMGUR_KEY'), configurator.get('IMGUR_SECRET'))
         engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.TYPING)
+        client = ImgurClient(configurator.get('IMGUR_KEY'), configurator.get('IMGUR_SECRET'))
 
         gallery = client.subreddit_gallery('realgirls', sort='new', window='all', page=int(random() * 30))
-        item = choice(gallery)
+        gallery = filter(lambda item: item.size > 0, gallery)
 
-        engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.UPLOAD_PHOTO)
+        attempt = 0
+        while attempt < 3:
+            item = choice(gallery)
 
-        engine.telegram.sendPhoto(
-            chat_id=message.chat_id,
-            photo=item.link,
-            caption=item.title
-        )
+            engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.UPLOAD_PHOTO)
+
+            try:
+                engine.telegram.sendPhoto(
+                    chat_id=message.chat_id,
+                    photo=item.link,
+                    caption=item.title
+                )
+                return True
+            except:
+                attempt += 1
+        engine.telegram.sendMessage(chat_id=message.chat_id, text='Я тричі спробувала отримати картинку, але сталася якась помилка в API telegram :(')
+
+        return True
 
     handle_realgirls = handle_realgirl
 
