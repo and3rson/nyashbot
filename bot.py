@@ -16,6 +16,7 @@ import telegram
 import handlers
 import tasks
 import configurator
+import random
 
 try:
     import settings as settings_test
@@ -23,6 +24,9 @@ except ImportError:
     sys.stdout.write(
         "Please create settings.py file this code:\n\nTOKEN = '<YOUR_TOKEN>'\nCHAT_ID = <CHAT_NUMERIC_ID>\n\n"
     )
+
+
+phrases = handlers.PhrasesHandler()
 
 
 class Scheduler(object):
@@ -51,10 +55,14 @@ class Bot(object):
             cmd = match[0].lower()
             args = match[2]
             method_name = 'handle_{}'.format(cmd)
-            for handler in self.handlers:
-                if hasattr(handler, method_name):
-                    spawn(handler.handle, self, message, cmd, args)
-                    break
+
+            if random.random() < 0.17:
+                spawn(phrases.handle, self, message, 'phrase', args)
+            else:
+                for handler in self.handlers:
+                    if hasattr(handler, method_name):
+                        spawn(handler.handle, self, message, cmd, args)
+                        break
         else:
             for handler in self.handlers:
                 if hasattr(handler, 'handle_message'):

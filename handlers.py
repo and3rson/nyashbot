@@ -802,3 +802,16 @@ class ResponseHandler(Command):
                 chat_id=message.chat_id,
                 sticker='BQADAgADFwADEWUuCAI773bfgwSoAg'
             )
+
+
+class PhrasesHandler(Command):
+    def __init__(self):
+        f = open('phrases.txt', 'r')
+        self.phrases = filter(None, f.read().split('\n'))
+        f.close()
+
+    def handle_phrase(self, engine, message, cmd, args):
+        engine.telegram.sendMessage(
+            chat_id=message.chat_id,
+            text='@{}, {}!'.format(message.from_user.username, choice(self.phrases))
+        )
