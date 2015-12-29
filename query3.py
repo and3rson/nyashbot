@@ -47,7 +47,7 @@ class Connection(object):
     def recv(self):
         if self.conn in select.select([self.conn], [], [], self.timeout)[0]:
             return Packet(self.conn.recv(1024))
-        raise Exception('Timeout while trying to request data.')
+        raise Exception('UT2004 server {}:{} seems to be offline.'.format(self.host, self.port))
 
     #def send(self, data):
         #self.conn.sendto(data, (HOST, PORT))
@@ -70,11 +70,13 @@ class Connection(object):
         response.skip(18)
 
         return dict(
+            host=self.host,
+            port=self.port,
             server_name=response.readS(),
             map_name=response.readS(),
             game_type=response.readS(),
             player_count=response.readD(),
-            max_player_count=response.readD(),
+            max_player_count=response.readD()
         )
 
 #try:

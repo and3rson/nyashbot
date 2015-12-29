@@ -753,7 +753,7 @@ class UTHandler(Command):
         info = self.conn.get_info()
         engine.telegram.sendMessage(
             chat_id=message.chat_id,
-            text='Server: `{server_name}`\nGame type: `{game_type}`\nMap: `{map_name}`\nPlayers: `{player_count}`/`{max_player_count}`'.format(**info),
+            text='Server: `{server_name}` ({host}:{port})\nGame type: `{game_type}`\nMap: `{map_name}`\nPlayers: `{player_count}`/`{max_player_count}`'.format(**info),
             parse_mode='Markdown'
         )
 
