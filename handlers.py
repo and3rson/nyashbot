@@ -22,6 +22,7 @@ from random import choice, random
 import datetime
 import traceback
 from imgurpython import ImgurClient
+import query3
 
 
 class MLStripper(HTMLParser):
@@ -742,6 +743,19 @@ class VKAudioHandler(Command):
 
     def handle_musicroll(self, engine, message, cmd, args):
         return self.handle_music(engine, message, cmd, args, True)
+
+
+class UTHandler(Command):
+    def __init__(self):
+        self.conn = query3.Connection()
+
+    def handle_ut(self, engine, message, cmd, args):
+        info = self.conn.get_info()
+        engine.telegram.sendMessage(
+            chat_id=message.chat_id,
+            text='Server: `{server_name}`\nGame type: `{game_type}`\nMap: `{map_name}`\nPlayers: `{player_count}`/`{max_player_count}`'.format(**info),
+            parse_mode='Markdown'
+        )
 
 
 class ResponseHandler(Command):

@@ -104,7 +104,7 @@ if __name__ == '__main__':
         handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(),
         handlers.DotaRandom(), handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(),
         handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler(), handlers.VKAudioHandler(),
-        handlers.TitsBoobsHandler(), handlers.ResponseHandler(),
+        handlers.TitsBoobsHandler(), handlers.ResponseHandler(), handlers.UTHandler(),
         handlers.RealGirlsHandler()
     )
 
