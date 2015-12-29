@@ -83,7 +83,7 @@ class Connection(object):
     #sys.exit(1)
 #else:
     #print 'Server: 5.187.7.185:{}'.format(info['hostport'])
-     'Current map: {}'.format(info['maptitle'])
+    # 'Current map: {}'.format(info['maptitle'])
     #print 'Players: {}/{}'.format(info['numplayers'], info['maxplayers'])
     #print 'Protocol: {}, min: {}'.format(info['gamever'], info['minnetver'])
     #sys.exit(0)
