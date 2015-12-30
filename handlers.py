@@ -59,7 +59,7 @@ def translate(src, dest, text):
     browser.form['tl'] = [dest]
     browser.form['text'] = text
     response = browser.submit()
-    doc = BeautifulSoup(response.read())
+    doc = BeautifulSoup(response.read(), 'lxml')
     return ''.join([x.text for x in doc.select('span#result_box > span')])
 
 
@@ -239,7 +239,7 @@ class Pasta(Command):
     def handle_pasta(self, engine, message, cmd, args):
         if cmd == 'pasta':
             response = self.browser.open('http://kopipasta.ru/random/all/all/desc/')
-            soup = BeautifulSoup(response.read())
+            soup = BeautifulSoup(response.read(), 'lxml')
             links = soup.find_all('a', {'class': ['link-name']})
             link = choice(links)
             href = link['href']
@@ -411,7 +411,7 @@ class DotaRandom(Command):
             browser.addheaders = [('User-Agent', 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)')]
             browser.set_handle_robots(False)
             response = browser.open('http://www.dota2.com/heroes/?l=ukrainian')
-            soap = BeautifulSoup(response.read())
+            soap = BeautifulSoup(response.read(), 'lxml')
 
             filter_name = soap.find_all('select', {'id': ['filterName']})[0]
             hero_names = {
@@ -558,7 +558,7 @@ class PornRoll(Command):
 
             try:
                 id = int(random() * 100000)
-                data = BeautifulSoup(urllib2.urlopen('http://www.xvideos.com/new/{}'.format(id)).read())
+                data = BeautifulSoup(urllib2.urlopen('http://www.xvideos.com/new/{}'.format(id)).read(), 'lxml')
             except:
                 pass
             else:
@@ -748,14 +748,35 @@ class VKAudioHandler(Command):
 class UTHandler(Command):
     def __init__(self):
         self.conn = query3.Connection()
+        self.wiki = 'http://liandri.beyondunreal.com'
 
     def handle_ut(self, engine, message, cmd, args):
         info = self.conn.get_info()
-        engine.telegram.sendMessage(
-            chat_id=message.chat_id,
-            text='Server: `{server_name}` ({host}:{port})\nGame type: `{game_type}`\nMap: `{map_name}`\nPlayers: `{player_count}`/`{max_player_count}`'.format(**info),
-            parse_mode='Markdown'
-        )
+
+        image = None
+
+        try:
+            response = urllib2.urlopen('{}/{}'.format(self.wiki, info['map_name']))
+        except:
+            pass
+        else:
+            doc = BeautifulSoup(response.read(), 'lxml')
+            thumb = doc.find('img', {'class': ['thumbimage']})
+            image = self.wiki + '/' + thumb['src']
+
+        text = 'Server: {server_name} ({host}:{port})\nGame type: {game_type}\nMap: {map_name}\nPlayers: {player_count}/{max_player_count}'.format(**info)
+
+        if image:
+            engine.telegram.sendPhoto(
+                chat_id=message.chat_id,
+                photo=image,
+                caption=text,
+            )
+        else:
+            engine.telegram.sendMessage(
+                chat_id=message.chat_id,
+                text=text
+            )
 
 
 class ResponseHandler(Command):
