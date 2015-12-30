@@ -3,6 +3,7 @@
 from __future__ import print_function
 import os
 import urllib
+from base64 import b64encode
 
 import telegram
 import mechanize
@@ -750,21 +751,55 @@ class UTHandler(Command):
         self.conn = query3.Connection()
         self.wiki = 'http://liandri.beyondunreal.com'
 
+    def get_players(self):
+        request = urllib2.Request('http://dun.ai:8075/ServerAdmin/current_players')
+        request.add_header('Authorization', 'Basic {}'.format(b64encode('{}:{}'.format(configurator.get('UT_ADMIN_LOGIN'), configurator.get('UT_ADMIN_PASSWORD')))))
+        response = urllib2.urlopen(request)
+        doc = BeautifulSoup(response.read(), 'lxml')
+
+        trs = doc.select('form[action="current_players"] tr[align="left"]')
+
+        names = [tr.find_all('td')[2].contents[0].encode('utf-8').replace('\xc2\xa0', ' ').strip() for tr in trs]
+
+        bots = []
+        players = []
+
+        for name in names:
+            if name.endswith('(Bot)'):
+                bots.append(name.split(' ')[0])
+            else:
+                players.append((name, False))
+
+        return (sum((len(bots), len(players))), players, bots)
+
     def handle_ut(self, engine, message, cmd, args):
         info = self.conn.get_info()
+
+        player_count, players, bots = self.get_players()
+
+        info['player_count'] = player_count
 
         image = None
 
         try:
-            response = urllib2.urlopen('{}/{}'.format(self.wiki, info['map_name']))
+            mod, mapname = info['map_name'].split('-')
+            mapname = mapname.capitalize()
+            url = '{}/{}'.format(self.wiki, '-'.join([mod, mapname]))
+            response = urllib2.urlopen(url)
         except:
             pass
         else:
             doc = BeautifulSoup(response.read(), 'lxml')
             thumb = doc.find('img', {'class': ['thumbimage']})
-            image = self.wiki + '/' + thumb['src']
+            if thumb:
+                image = self.wiki + '/' + thumb['src']
 
-        text = 'Server: {server_name} ({host}:{port})\nGame type: {game_type}\nMap: {map_name}\nPlayers: {player_count}/{max_player_count}'.format(**info)
+        info.update(dict(
+            players=', '.join(players) if len(players) else 'no players',
+            bots_count=len(bots)
+        ))
+
+        text = 'Server: {host}:{port}\nGame type: {game_type}\nMap: {map_name}\nPlayers: {player_count}/{max_player_count}\n\nPlayers: ({players})\nBots count: {bots_count}'.format(**info)
 
         if image:
             engine.telegram.sendPhoto(
@@ -775,7 +810,8 @@ class UTHandler(Command):
         else:
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
-                text=text
+                text=text,
+                parse_mode=None
             )
 
 

@@ -98,12 +98,18 @@ if __name__ == '__main__':
         print('Stats disabled')
     except (KeyError, ValueError, TypeError, AssertionError) as e:
         bot.add_handlers(handlers.Stats())
+    try:
+        assert int(os.environ['NO_VK']) == 1
+        print('VK auth disabled')
+    except (KeyError, ValueError, TypeError, AssertionError) as e:
+        bot.add_handlers(handlers.VKAudioHandler())
+
     bot.add_handlers(
         handlers.GenericHandler(),
         # handlers.GoogleHandler(),
         handlers.FooHandler(), handlers.Pasta(), handlers.Fortune(),
         handlers.DotaRandom(), handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(),
-        handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler(), handlers.VKAudioHandler(),
+        handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler(),
         handlers.TitsBoobsHandler(), handlers.ResponseHandler(), handlers.UTHandler(),
         handlers.RealGirlsHandler()
     )
