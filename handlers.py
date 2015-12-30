@@ -768,7 +768,7 @@ class UTHandler(Command):
             if name.endswith('(Bot)'):
                 bots.append(name.split(' ')[0])
             else:
-                players.append((name, False))
+                players.append(name)
 
         return (sum((len(bots), len(players))), players, bots)
 
