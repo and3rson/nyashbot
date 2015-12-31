@@ -880,11 +880,11 @@ class UTHandler(Command):
         image = self.get_map_image(info['map_name'])
 
         info.update(dict(
-            players=', '.join(players) if len(players) else 'no players',
+            players=', '.join(players) if len(players) else '(no players)',
             bots_count=len(bots)
         ))
 
-        text = 'Server: {host}:{port}\nGame type: {game_type}\nMap: {map_name}\nPlayers: {player_count}/{max_player_count}\n\nPlayers: ({players})\nBots count: {bots_count}'.format(**info)
+        text = 'Server: {host}:{port}\nGame type: {game_type}\nMap: {map_name}\nPlayers: {player_count}/{max_player_count}\n\nPlayers: {players}\nBots count: {bots_count}'.format(**info)
 
         if image:
             engine.telegram.sendPhoto(
