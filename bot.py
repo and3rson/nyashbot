@@ -56,7 +56,7 @@ class Bot(object):
             args = match[2]
             method_name = 'handle_{}'.format(cmd)
 
-            if random.random() < 0.17:
+            if random.random() < 0.005:
                 spawn(phrases.handle, self, message, 'phrase', args)
             else:
                 for handler in self.handlers:

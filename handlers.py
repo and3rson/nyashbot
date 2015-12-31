@@ -751,11 +751,16 @@ class UTHandler(Command):
         self.conn = query3.Connection()
         self.wiki = 'http://liandri.beyondunreal.com'
 
-    def get_players(self):
-        request = urllib2.Request('http://dun.ai:8075/ServerAdmin/current_players')
+        self.new_mode = None
+
+    def request(self, command, data=None):
+        request = urllib2.Request('http://dun.ai:8075/ServerAdmin/{}'.format(command), urllib.urlencode(data) if data else None)
         request.add_header('Authorization', 'Basic {}'.format(b64encode('{}:{}'.format(configurator.get('UT_ADMIN_LOGIN'), configurator.get('UT_ADMIN_PASSWORD')))))
         response = urllib2.urlopen(request)
-        doc = BeautifulSoup(response.read(), 'lxml')
+        return BeautifulSoup(response.read(), 'lxml')
+
+    def get_players(self):
+        doc = self.request('current_players')
 
         trs = doc.select('form[action="current_players"] tr[align="left"]')
 
@@ -772,19 +777,23 @@ class UTHandler(Command):
 
         return (sum((len(bots), len(players))), players, bots)
 
-    def handle_ut(self, engine, message, cmd, args):
-        info = self.conn.get_info()
+    def build_menu(self, options):
+        menu_items = [[]]
 
-        player_count, players, bots = self.get_players()
+        for i, option in enumerate(options):
+            menu_items[-1].append(option)
+            if (i + 1) % 3 == 0:
+                menu_items.append([])
 
-        info['player_count'] = player_count
+        return menu_items
 
+    def get_map_image(self, map_name_full):
         image = None
 
         try:
-            mod, mapname = info['map_name'].split('-')
-            mapname = mapname.capitalize()
-            url = '{}/{}'.format(self.wiki, '-'.join([mod, mapname]))
+            parts = map_name_full.split('-')
+            parts[-1] = parts[-1].capitalize()
+            url = '{}/{}'.format(self.wiki, '-'.join(parts))
             response = urllib2.urlopen(url)
         except:
             pass
@@ -793,6 +802,82 @@ class UTHandler(Command):
             thumb = doc.find('img', {'class': ['thumbimage']})
             if thumb:
                 image = self.wiki + '/' + thumb['src']
+
+        return image
+
+    def handle_ut_mode(self, engine, message, cmd, args):
+        if args:
+            self.new_mode = args
+
+            doc = self.request('current_game', dict(SwitchGameType='Switch', MapSelect='', GameTypeSelect=args))
+
+            options = [option['value'] for option in doc.select('select[name="MapSelect"] option')]
+
+            menu_items = self.build_menu(['/ut_map ' + option for option in options])
+
+            engine.telegram.sendMessage(
+                text='Вибрано режим: {}. Тепер виберіть карту:'.format(args),
+                chat_id=message.chat_id,
+                reply_markup=telegram.ReplyKeyboardMarkup(
+                    menu_items,
+                    one_time_keyboard=True,
+                    reply_to_message=message.message_id
+                )
+            )
+        else:
+            doc = self.request('current_game')
+            options = [option['value'] for option in doc.select('select[name="GameTypeSelect"] option')]
+
+            menu_items = self.build_menu(['/ut_mode ' + option for option in options])
+
+            engine.telegram.sendMessage(
+                text='Виберіть режим гри:',
+                chat_id=message.chat_id,
+                reply_markup=telegram.ReplyKeyboardMarkup(
+                    menu_items,
+                    one_time_keyboard=True,
+                    reply_to_message=message.message_id
+                )
+            )
+
+    def handle_ut_map(self, engine, message, cmd, args):
+        if args:
+            if self.new_mode:
+                mapname = args
+
+                self.request('current_game', dict(SwitchGameTypeAndMap='Switch', MapSelect=mapname, GameTypeSelect=self.new_mode))
+
+                image = self.get_map_image(mapname)
+
+                text = 'Сервер рестартується (зачекайте 10-15 секунд).\nРежим: {}\nКарта: {}'.format(self.new_mode, mapname)
+
+                if image:
+                    engine.telegram.sendPhoto(
+                        chat_id=message.chat_id,
+                        photo=image,
+                        caption=text,
+                    )
+                else:
+                    engine.telegram.sendMessage(
+                        chat_id=message.chat_id,
+                        text=text,
+                        parse_mode=None
+                    )
+
+                self.new_mode = None
+            else:
+                raise Exception('Спершу виберіть режим гри ("/ut_mode")')
+        else:
+            doc = self.request('current_game')
+
+    def handle_ut(self, engine, message, cmd, args):
+        info = self.conn.get_info()
+
+        player_count, players, bots = self.get_players()
+
+        info['player_count'] = player_count
+
+        image = self.get_map_image(info['map_name'])
 
         info.update(dict(
             players=', '.join(players) if len(players) else 'no players',
