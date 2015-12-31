@@ -86,8 +86,8 @@ class Command(object):
             traceback.print_exc()
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
-                text='**{}**: {}'.format(str(e.__class__.__name__), str(e)),
-                parse_mode='Markdown'
+                text='{}: {}'.format(str(e.__class__.__name__), str(e)),
+                parse_mode=None
             )
 
 
@@ -777,13 +777,18 @@ class UTHandler(Command):
 
         return (sum((len(bots), len(players))), players, bots)
 
-    def build_menu(self, options):
+    def build_menu(self, options, cancellable=True):
         menu_items = [[]]
 
         for i, option in enumerate(options):
             menu_items[-1].append(option)
             if (i + 1) % 3 == 0:
                 menu_items.append([])
+
+        if cancellable:
+            if len(menu_items[-1]) == 3:
+                menu_items.append([])
+            menu_items[-1].append('/cancel')
 
         return menu_items
 
