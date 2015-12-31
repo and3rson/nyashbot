@@ -777,18 +777,13 @@ class UTHandler(Command):
 
         return (sum((len(bots), len(players))), players, bots)
 
-    def build_menu(self, options, cancellable=True):
+    def build_menu(self, options):
         menu_items = [[]]
 
         for i, option in enumerate(options):
             menu_items[-1].append(option)
             if (i + 1) % 3 == 0:
                 menu_items.append([])
-
-        if cancellable:
-            if len(menu_items[-1]) == 3:
-                menu_items.append([])
-            menu_items[-1].append('/cancel')
 
         return menu_items
 
@@ -815,33 +810,36 @@ class UTHandler(Command):
             self.new_mode = args
 
             doc = self.request('current_game', dict(SwitchGameType='Switch', MapSelect='', GameTypeSelect=args))
+            options = ['/ut_map ' + option['value'] for option in doc.select('select[name="MapSelect"] option')]
+            options.append('/cancel')
 
-            options = [option['value'] for option in doc.select('select[name="MapSelect"] option')]
-
-            menu_items = self.build_menu(['/ut_map ' + option for option in options])
+            menu_items = self.build_menu(options)
 
             engine.telegram.sendMessage(
                 text='Вибрано режим: {}. Тепер виберіть карту:'.format(args),
                 chat_id=message.chat_id,
+                reply_to_message=message.message_id,
                 reply_markup=telegram.ReplyKeyboardMarkup(
                     menu_items,
                     one_time_keyboard=True,
-                    reply_to_message=message.message_id
+                    selective=True
                 )
             )
         else:
             doc = self.request('current_game')
-            options = [option['value'] for option in doc.select('select[name="GameTypeSelect"] option')]
+            options = ['/ut_mode ' + option['value'] for option in doc.select('select[name="GameTypeSelect"] option')]
+            options.append('/cancel')
 
-            menu_items = self.build_menu(['/ut_mode ' + option for option in options])
+            menu_items = self.build_menu(options)
 
             engine.telegram.sendMessage(
                 text='Виберіть режим гри:',
                 chat_id=message.chat_id,
+                reply_to_message=message.message_id,
                 reply_markup=telegram.ReplyKeyboardMarkup(
                     menu_items,
                     one_time_keyboard=True,
-                    reply_to_message=message.message_id
+                    selective=True
                 )
             )
 
@@ -873,7 +871,7 @@ class UTHandler(Command):
             else:
                 raise Exception('Спершу виберіть режим гри ("/ut_mode")')
         else:
-            doc = self.request('current_game')
+            pass
 
     def handle_ut(self, engine, message, cmd, args):
         info = self.conn.get_info()
@@ -976,3 +974,16 @@ class PhrasesHandler(Command):
             chat_id=message.chat_id,
             text='@{}, {}!'.format(message.from_user.username, choice(self.phrases))
         )
+
+
+class CancelHandler(Command):
+    def handle_cancel(self, engine, message, cmd, args):
+        engine.telegram.sendMessage(
+            text='Скасовано.',
+            chat_id=message.chat_id,
+            reply_to_message=message.message_id,
+            reply_markup=telegram.ReplyKeyboardHide(
+                selective=True
+            )
+        )
+        return True
