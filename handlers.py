@@ -271,6 +271,7 @@ class Stats(Command):
         3000: u'{} написав 3000-е повідомлення! Піздец. Зроби щось корисне :P',
         4000: u'{} написав 4000-е повідомлення! Піздец. Зроби щось корисне :P',
         5000: u'{} написав 5000-е повідомлення! Піздец. Зроби щось корисне :P',
+        9001: u'В {} вже OVER NINE THOUSAND меседжів. ДЕВ`ЯТЬ ТИСЯЧ, КАРЛ!',
     }
 
     TITLES = (
@@ -307,6 +308,7 @@ class Stats(Command):
         if cmd == 'stats':
             result = self.db.select('SELECT * FROM stats ORDER BY message_count DESC LIMIT 5')
             counts = self.db.select('SELECT COUNT(*) FROM stats UNION SELECT COUNT(*) FROM facts')
+            total_all = self.db.select('SELECT SUM(message_count) FROM stats')
             stars_count = stars.select('SELECT COUNT(*) FROM stars')
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
@@ -316,7 +318,8 @@ class Stats(Command):
                         for i, row
                         in enumerate(result)
                         ]
-                ) + u'\n\nВ базі **{}** юзер(ів) і **{}** упоротий(х) факт(ів).\nПроіндексовано **{}** порнозірок з XVideos.\n\nКрім того, доводимо до вашого відома, що {}.\n\n{}'.format(
+                ) + u'\n\nВсього написано як мінімум {} повідомлень.\nВ базі **{}** юзер(ів) і **{}** упоротий(х) факт(ів).\nПроіндексовано **{}** порнозірок з XVideos.\n\nКрім того, доводимо до вашого відома, що {}.\n\n{}'.format(
+                    total_all[0][0],
                     counts[0][0],
                     counts[1][0],
                     stars_count[0][0],
