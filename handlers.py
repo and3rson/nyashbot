@@ -286,17 +286,24 @@ class Stats(Command):
         self.db.upsert('stats', [
             ('username', 'varchar(64)'),
             ('message_count', 'int'),
+            ('chat_id', 'int'),
+        ])
+        self.db.upsert('messages', [
+            ('username', 'varchar(64)'),
+            ('chat_id', 'int'),
+            ('message', 'text'),
+            ('date_added', 'timestamp default current_time'),
         ])
 
         self.start_time = datetime.datetime.now()
         self.version = os.popen('git rev-parse HEAD').read().strip()
         self.last_commit = os.popen('git log --pretty=format:%cd').read().split('\n')[0]
 
-    def get_fact(self):
+    def get_fact(self, chat_id):
         results = db.select('SELECT text FROM facts ORDER BY RANDOM() LIMIT 1')
         if not results:
             raise Exception('В базі ще немає жодного факту :(')
-        users = db.select('SELECT username FROM stats ORDER BY RANDOM() LIMIT 5')
+        users = db.select('SELECT username FROM stats WHERE chat_id = ? ORDER BY RANDOM() LIMIT 5', (chat_id,))
         if not users or len(users) < 3:
             raise Exception('Недостатньо людей в базі :(')
         result = results[0][0]
@@ -305,7 +312,7 @@ class Stats(Command):
 
     def handle_stats(self, engine, message, cmd, args):
         if cmd == 'stats':
-            result = self.db.select('SELECT * FROM stats ORDER BY message_count DESC LIMIT 5')
+            result = self.db.select('SELECT * FROM stats WHERE chat_id = ? ORDER BY message_count DESC LIMIT 5', (message.chat.id,))
             counts = self.db.select('SELECT COUNT(*) FROM stats UNION SELECT COUNT(*) FROM facts')
             stars_count = stars.select('SELECT COUNT(*) FROM stars')
             engine.telegram.sendMessage(
@@ -320,7 +327,7 @@ class Stats(Command):
                     counts[0][0],
                     counts[1][0],
                     stars_count[0][0],
-                    self.get_fact(),
+                    self.get_fact(message.chat.id),
                     self.get_version()
                 ),
                 parse_mode='Markdown'
@@ -330,10 +337,17 @@ class Stats(Command):
             self.increase(engine, message)
 
     def handle_message(self, engine, message):
+        print(message.chat.id)
+        self.db.execute('INSERT INTO messages(username, chat_id, message) VALUES(?, ?, ?)', (
+            message.from_user.username or message.from_user.id,
+            message.chat.id,
+            message.text
+        ))
+
         self.increase(engine, message)
 
     def increase(self, engine, message):
-        if not isinstance(message.chat, telegram.GroupChat):
+        if message.chat.id > 0:
             return
 
         if not message.from_user.username:
@@ -341,9 +355,10 @@ class Stats(Command):
 
         result = self.db.select('SELECT * FROM stats WHERE username = "{}"'.format(message.from_user.username))
         if not result:
-            self.db.execute('INSERT INTO stats(username, message_count) VALUES("{}", {})'.format(
+            self.db.execute('INSERT INTO stats(username, message_count, chat_id) VALUES("{}", {}, {})'.format(
                 message.from_user.username,
-                1
+                1,
+                message.chat.id
             ))
             count = 1
         else:
