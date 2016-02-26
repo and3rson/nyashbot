@@ -199,6 +199,8 @@ class RealGirlsHandler(Command):
         gallery = client.subreddit_gallery(source, sort='new', window='all', page=int(random() * 30))
         gallery = filter(lambda item: item.size > 0, gallery)
 
+        print(gallery)
+
         attempt = 0
         while attempt < 3:
             item = choice(gallery)
@@ -219,7 +221,10 @@ class RealGirlsHandler(Command):
         return True
 
     def handle_realgirl(self, engine, message, cmd, args):
-        return self.subreddit('realgirl', engine, message, cmd, args)
+        return self.subreddit('RealGirls', engine, message, cmd, args)
+
+    def handle_amateur(self, engine, message, cmd, args):
+        return self.subreddit('Amateur', engine, message, cmd, args)
 
     def handle_nsfw(self, engine, message, cmd, args):
         return self.subreddit('nsfw', engine, message, cmd, args)
