@@ -346,7 +346,6 @@ class Stats(Command):
             self.increase(engine, message)
 
     def handle_message(self, engine, message):
-        print(message.chat.id)
         self.db.execute('INSERT INTO messages(username, chat_id, message) VALUES(?, ?, ?)', (
             message.from_user.username or message.from_user.id,
             message.chat.id,
@@ -378,7 +377,6 @@ class Stats(Command):
                 message.from_user.username
             ))[0][0]
         congrats = Stats.META.get(int(count), None)
-        print(repr(congrats))
         if congrats:
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
