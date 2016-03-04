@@ -1074,6 +1074,7 @@ class MemeHandler(Command):
         text_color = meta['textColor']
         font_size = meta['fontSize']
         x, y, w, h = meta['rect']
+        iw, ih = img.size
 
         font = ImageFont.truetype('./fonts/Roboto-Regular.ttf', size=font_size)
         # font = ImageFont.load('./fonts/Roboto-Regular.ttf')
@@ -1116,7 +1117,13 @@ class MemeHandler(Command):
         # )
 
         engine.telegram.answerInlineQuery(inline_query.id, [
-            InlineQueryResultPhoto(long(time.time() * 1000000), photo_url=configurator.get('IMG_HOST') + img_name_full, thumb_url=configurator.get('IMG_HOST') + img_name_thumb)
+            InlineQueryResultPhoto(
+                long(time.time() * 1000000),
+                photo_url=configurator.get('IMG_HOST') + img_name_full,
+                thumb_url=configurator.get('IMG_HOST') + img_name_thumb,
+                photo_width=iw,
+                photo_height=ih
+            )
         ])
 
         # os.unlink(tf.name)
