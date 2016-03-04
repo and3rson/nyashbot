@@ -1058,7 +1058,7 @@ class MemeHandler(Command):
             return True
 
         name = parts[0]
-        text = ' '.join(parts[1:])
+        texts = filter(None, [x.strip() for x in ' '.join(parts[1:]).split(';')])
         try:
             meta_file = open('./memes/{}.json'.format(name))
             meta = json.loads(meta_file.read())
@@ -1073,21 +1073,30 @@ class MemeHandler(Command):
         draw = ImageDraw.Draw(img)
         text_color = meta['textColor']
         font_size = meta['fontSize']
-        x, y, w, h = meta['rect']
         iw, ih = img.size
 
         font = ImageFont.truetype('./fonts/Roboto-Regular.ttf', size=font_size)
         # font = ImageFont.load('./fonts/Roboto-Regular.ttf')
 
-        avg_width = draw.textsize(text, font)[0] / len(text)
+        rects = meta['rects']
 
-        chars_per_line = w / avg_width
+        for i, text in enumerate(texts):
+            try:
+                x, y, w, h = rects[i]
+            except:
+                continue
 
-        multiline = '\n'.join(textwrap.wrap(text, width=chars_per_line))
+            print(x, y, w, h, i, text)
 
-        mw, mh = draw.multiline_textsize(multiline, font)
+            avg_width = draw.textsize(text, font)[0] / len(text)
 
-        draw.multiline_text((x + w / 2 - mw / 2, y + h / 2 - mh / 2), multiline, fill=text_color, font=font, align='center')
+            chars_per_line = w / avg_width
+
+            multiline = '\n'.join(textwrap.wrap(text, width=chars_per_line))
+
+            mw, mh = draw.multiline_textsize(multiline, font)
+
+            draw.multiline_text((x + w / 2 - mw / 2, y + h / 2 - mh / 2), multiline, fill=text_color, font=font, align='center')
 
         # img.show()
 
@@ -1101,20 +1110,25 @@ class MemeHandler(Command):
 
         s = str(long(time.time() * 1000000))
 
-        img_name_full = '{}.jpg'.format(s)
-        img_name_thumb = '{}_thumb.jpg'.format(s)
+        img_name_full = '{}.jpeg'.format(s)
+        img_name_thumb = '{}_thumb.jpeg'.format(s)
 
         img_path_full = configurator.get('IMG_DIR') + img_name_full
         img_path_thumb = configurator.get('IMG_DIR') + img_name_thumb
 
         img.save(img_path_full)
-        img.thumbnail((128, 128), Image.LINEAR)
+        img.thumbnail((160, 160), Image.LINEAR)
         img.save(img_path_thumb)
 
         # engine.telegram.sendPhoto(
         #     chat_id=message.chat.id,
         #     photo=f
         # )
+
+        print(dict(
+            photo_url=configurator.get('IMG_HOST') + img_name_full,
+            thumb_url=configurator.get('IMG_HOST') + img_name_thumb,
+        ))
 
         engine.telegram.answerInlineQuery(inline_query.id, [
             InlineQueryResultPhoto(
