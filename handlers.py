@@ -1086,8 +1086,6 @@ class MemeHandler(Command):
             except:
                 continue
 
-            print(x, y, w, h, i, text)
-
             avg_width = draw.textsize(text, font)[0] / len(text)
 
             chars_per_line = w / avg_width
@@ -1125,10 +1123,10 @@ class MemeHandler(Command):
         #     photo=f
         # )
 
-        print(dict(
-            photo_url=configurator.get('IMG_HOST') + img_name_full,
-            thumb_url=configurator.get('IMG_HOST') + img_name_thumb,
-        ))
+        # print(dict(
+        #     photo_url=configurator.get('IMG_HOST') + img_name_full,
+        #     thumb_url=configurator.get('IMG_HOST') + img_name_thumb,
+        # ))
 
         engine.telegram.answerInlineQuery(inline_query.id, [
             InlineQueryResultPhoto(
