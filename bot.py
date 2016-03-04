@@ -47,27 +47,33 @@ class Bot(object):
             self.handlers.append(handler)
 
     def handle_update(self, update):
-        message = update.message
-        match = re.findall('^/([a-zA-Z_0-9]+)(\s+(.+$))?', message.text.strip())
-
-        if match:
-            match = match[0]
-            cmd = match[0].lower()
-            args = match[2]
-            method_name = 'handle_{}'.format(cmd)
-
-            if random.random() < 0.1:
-                spawn(phrases.handle, self, message, 'phrase', args)
-            else:
-                for handler in self.handlers:
-                    if hasattr(handler, method_name):
-                        spawn(handler.handle, self, message, cmd, args)
+        if update.inline_query:
+            for handler in self.handlers:
+                if hasattr(handler, 'handle_inline'):
+                    if handler.handle_inline(self, update.inline_query):
                         break
         else:
-            for handler in self.handlers:
-                if hasattr(handler, 'handle_message'):
-                    if handler.handle_message(self, message):
-                        break
+            message = update.message
+            match = re.findall('^/([a-zA-Z_0-9]+)(\s+(.+$))?', message.text.strip())
+
+            if match:
+                match = match[0]
+                cmd = match[0].lower()
+                args = match[2]
+                method_name = 'handle_{}'.format(cmd)
+
+                if random.random() < 0.1:
+                    spawn(phrases.handle, self, message, 'phrase', args)
+                else:
+                    for handler in self.handlers:
+                        if hasattr(handler, method_name):
+                            spawn(handler.handle, self, message, cmd, args)
+                            break
+            else:
+                for handler in self.handlers:
+                    if hasattr(handler, 'handle_message'):
+                        if handler.handle_message(self, message):
+                            break
 
     def loop(self):
         while not self.terminated:
@@ -111,7 +117,7 @@ if __name__ == '__main__':
         handlers.DotaRandom(), handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(),
         handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler(),
         handlers.TitsBoobsHandler(), handlers.ResponseHandler(), handlers.UTHandler(),
-        handlers.RealGirlsHandler(), handlers.CancelHandler()
+        handlers.RealGirlsHandler(), handlers.CancelHandler(), handlers.MemeHandler()
     )
 
     # tasks.NineGagPoster(bot)

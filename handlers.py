@@ -1,7 +1,10 @@
 # coding: utf-8
 
 from __future__ import print_function
+from StringIO import StringIO
 import os
+from tempfile import NamedTemporaryFile
+import textwrap
 import urllib
 from base64 import b64encode
 
@@ -13,6 +16,7 @@ from random import choice, random
 import urllib2
 from bs4 import BeautifulSoup
 import time
+from telegram.inlinequeryresult import InlineQueryResult, InlineQueryResultArticle, InlineQueryResultPhoto
 from db import db, stars
 import json
 from HTMLParser import HTMLParser
@@ -24,6 +28,7 @@ import datetime
 import traceback
 from imgurpython import ImgurClient
 import query3
+from PIL import Image, ImageDraw, ImageFont
 
 
 class MLStripper(HTMLParser):
@@ -207,14 +212,27 @@ class RealGirlsHandler(Command):
 
             engine.telegram.sendChatAction(message.chat_id, telegram.ChatAction.UPLOAD_PHOTO)
 
+            print(message.chat_id)
+            print(item.link)
+            print(item.title)
+
+            tf = NamedTemporaryFile(delete=False, suffix=item.link.split('.')[-1])
+            img = urllib2.urlopen(item.link).read()
+            tf.write(img)
+            tf.close()
+
             try:
                 engine.telegram.sendPhoto(
                     chat_id=message.chat_id,
-                    photo=item.link,
-                    caption=item.title
+                    photo=open(tf.name, 'rb'),
+                    # photo='https://www.google.com.ua/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png',
+                    # caption=item.title
                 )
+                os.unlink(tf.name)
                 return True
             except:
+                os.unlink(tf.name)
+                raise
                 attempt += 1
         engine.telegram.sendMessage(chat_id=message.chat_id, text='Я тричі спробувала отримати картинку, але сталася якась помилка в API telegram :(')
 
@@ -1008,4 +1026,99 @@ class CancelHandler(Command):
                 selective=True
             )
         )
+        return True
+
+
+class MemeHandler(Command):
+    # def handle_gen(self, engine, message, cmd, args):
+    def handle_inline(self, engine, inline_query):
+        text = inline_query.query
+        # parts = filter(None, message.text.split(' '))
+        # if len(parts) < 3:
+        #     engine.telegram.sendMessage(
+        #         text='Інструкція:\n/gen image_name Текст для відображення.\nДоступні зображення:\n{}'.format(
+        #             '\n'.join('{}'.format('.'.join(x.split('.')[:-1])) for x in os.listdir('./memes'))
+        #         ),
+        #         chat_id=message.chat_id,
+        #         reply_to_message=message.message_id,
+        #         reply_markup=telegram.ReplyKeyboardHide(
+        #             selective=True
+        #         )
+        #     )
+        #     return
+
+        parts = text.split(' ')
+
+        if len(parts) < 2:
+            engine.telegram.answerInlineQuery(inline_query.id, [
+                InlineQueryResultArticle(long(time.time() * 1000000), 'Можливий варіант: ' + '.'.join(x.split('.')[:-1]), ':/')
+                for x
+                in os.listdir('./memes')
+            ])
+            return True
+
+        name = parts[0]
+        text = ' '.join(parts[1:])
+        try:
+            meta_file = open('./memes/{}.json'.format(name))
+            meta = json.loads(meta_file.read())
+            meta_file.close()
+        except:
+            engine.telegram.answerInlineQuery(inline_query.id, [
+                InlineQueryResultArticle(long(time.time() * 1000000), 'Зображення "{}" не знайдено :('.format(name), ':/')
+                ])
+            return
+
+        img = Image.open(meta['src'])
+        draw = ImageDraw.Draw(img)
+        text_color = meta['textColor']
+        font_size = meta['fontSize']
+        x, y, w, h = meta['rect']
+
+        font = ImageFont.truetype('./fonts/Roboto-Regular.ttf', size=font_size)
+        # font = ImageFont.load('./fonts/Roboto-Regular.ttf')
+
+        avg_width = draw.textsize(text, font)[0] / len(text)
+
+        chars_per_line = w / avg_width
+
+        multiline = '\n'.join(textwrap.wrap(text, width=chars_per_line))
+
+        mw, mh = draw.multiline_textsize(multiline, font)
+
+        draw.multiline_text((x + w / 2 - mw / 2, y + h / 2 - mh / 2), multiline, fill=text_color, font=font, align='center')
+
+        # img.show()
+
+        # img.drawText()
+
+        # tf = NamedTemporaryFile(delete=False, suffix='.jpg')
+        # img.save(tf, format='JPEG', quality=92)
+        # tf.close()
+        #
+        # f = open(tf.name, 'rb')
+
+        s = str(long(time.time() * 1000000))
+
+        img_name_full = '{}.jpg'.format(s)
+        img_name_thumb = '{}_thumb.jpg'.format(s)
+
+        img_path_full = configurator.get('IMG_DIR') + img_name_full
+        img_path_thumb = configurator.get('IMG_DIR') + img_name_thumb
+
+        img.save(img_path_full)
+        img.thumbnail((128, 128), Image.LINEAR)
+        img.save(img_path_thumb)
+
+        # engine.telegram.sendPhoto(
+        #     chat_id=message.chat.id,
+        #     photo=f
+        # )
+
+        engine.telegram.answerInlineQuery(inline_query.id, [
+            InlineQueryResultPhoto(long(time.time() * 1000000), photo_url=configurator.get('IMG_HOST') + img_name_full, thumb_url=configurator.get('IMG_HOST') + img_name_thumb)
+        ])
+
+        # os.unlink(tf.name)
+
         return True
