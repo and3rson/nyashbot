@@ -224,7 +224,7 @@ class RealGirlsHandler(Command):
             try:
                 engine.telegram.sendPhoto(
                     chat_id=message.chat_id,
-                    photo=open(tf.name, 'rb'),
+                    photo=open(tf.name, 'r'),
                     # photo='https://www.google.com.ua/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png',
                     # caption=item.title
                 )
@@ -232,7 +232,6 @@ class RealGirlsHandler(Command):
                 return True
             except:
                 os.unlink(tf.name)
-                raise
                 attempt += 1
         engine.telegram.sendMessage(chat_id=message.chat_id, text='Я тричі спробувала отримати картинку, але сталася якась помилка в API telegram :(')
 
