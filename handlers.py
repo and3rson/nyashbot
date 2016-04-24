@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from __future__ import print_function
-from StringIO import StringIO
 import os
 from tempfile import NamedTemporaryFile
 import textwrap
@@ -12,11 +11,14 @@ import telegram
 import mechanize
 import re
 from urllib import urlencode
-from random import choice, random
 import urllib2
 from bs4 import BeautifulSoup
 import time
-from telegram.inlinequeryresult import InlineQueryResult, InlineQueryResultArticle, InlineQueryResultPhoto
+from telegram.inlinequeryresult import (
+    InlineQueryResultArticle,
+    InlineQueryResultPhoto
+)
+from custom import InlineQueryResultAudio
 from db import db, stars
 import json
 from HTMLParser import HTMLParser
@@ -676,6 +678,11 @@ class AdminHandler(Command):
                 )
 
 
+class _VKAudioHandler(Command):
+    def handle_music(self, *args):
+        raise Exception('Ця команда застаріла. Пишіть @nyashbot <назва треку>')
+
+
 class VKAudioHandler(Command):
     def __init__(self):
         self.need_captcha = False
@@ -1028,6 +1035,37 @@ class CancelHandler(Command):
         return True
 
 
+class InlineAudioHandler(Command):
+    def __init__(self):
+        self.last_login = 0
+        self.vkapi = vk.VKApi()
+        self.login()
+
+    def login(self):
+        print('Trying to authorize at VK...')
+        login_result = self.vkapi.log_in(
+            configurator.get('VK_LOGIN'),
+            configurator.get('VK_PASS'),
+            configurator.get('VK_APP_ID'),
+            'audio'
+        )
+        if login_result:
+            print('VK auth succeeded!')
+        else:
+            print('VK auth failed.')
+        self.last_login = time.time()
+
+    def handle_inline(self, engine, inline_query):
+        result = self.vkapi.request('audio.search', q=inline_query.query, v=5.37)
+        items = result['response']['items']
+
+        engine.telegram.answerInlineQuery(inline_query.id, [
+            InlineQueryResultAudio(long(time.time() * 1000000), t['url'], 'audio/mp3', t['artist'].strip(), t['title'].strip())
+            for t
+            in items[:10]
+        ])
+
+
 class MemeHandler(Command):
     # def handle_gen(self, engine, message, cmd, args):
     def handle_inline(self, engine, inline_query):
@@ -1045,6 +1083,13 @@ class MemeHandler(Command):
         #         )
         #     )
         #     return
+
+        URL = 'http://cs4739v4.vk.me/u1843971/audios/f4201aa0226b.mp3?extra=LCwf3s2KXKBogyul0zl4g7NqOc68x4Gt9xqPmHCsFltcZ-GRKm0xBaQPS6SmERwJkZoG6mfcU-_Dkn7ArSIWg-O2wRFt_ndr4HQisQ3MDZszL1RzdJGQ8m80kLfMLbNQNHf3qY2VSTsQ'
+
+        engine.telegram.answerInlineQuery(inline_query.id, [
+            InlineQueryResultAudio(long(time.time() * 1000000), URL, 'audio/mp3', 'Test', 'Song123!')
+        ])
+        return
 
         parts = text.split(' ')
 

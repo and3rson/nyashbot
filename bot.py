@@ -108,7 +108,7 @@ if __name__ == '__main__':
         assert int(os.environ['NO_VK']) == 1
         print('VK auth disabled')
     except (KeyError, ValueError, TypeError, AssertionError) as e:
-        bot.add_handlers(handlers.VKAudioHandler())
+        bot.add_handlers(handlers._VKAudioHandler())
 
     bot.add_handlers(
         handlers.GenericHandler(),
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         handlers.DotaRandom(), handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(),
         handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler(),
         handlers.TitsBoobsHandler(), handlers.ResponseHandler(), handlers.UTHandler(),
-        handlers.RealGirlsHandler(), handlers.CancelHandler(), handlers.MemeHandler()
+        handlers.RealGirlsHandler(), handlers.CancelHandler(), handlers.InlineAudioHandler()
     )
 
     # tasks.NineGagPoster(bot)

@@ -3,3 +3,6 @@ telegram
 python-telegram-bot
 BeautifulSoup4
 gevent
+pillow
+imgurpython
+lxml
