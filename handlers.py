@@ -1277,7 +1277,7 @@ class CarmaHandler(Command):
         )
 
         if not len(results):
-            raise Exception('{} ще не має жодного комменду чи репорту.')
+            raise Exception('{} ще не має жодного комменду чи репорту.'.format(username))
 
         _, _, commends, reports = results[0]
 
