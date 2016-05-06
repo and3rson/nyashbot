@@ -1056,6 +1056,9 @@ class InlineAudioHandler(Command):
         self.last_login = time.time()
 
     def handle_inline(self, engine, inline_query):
+        if self.last_login < time.time() - 3600:
+            self.login()
+
         result = self.vkapi.request('audio.search', q=inline_query.query, v=5.37)
         items = result['response']['items']
 
