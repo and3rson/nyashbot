@@ -1281,7 +1281,7 @@ class CarmaHandler(Command):
 
         engine.telegram.sendMessage(
             text='Карма: {}\n{} репорт(ів), {} комменд(ів)'.format(
-                float(commends) / float(reports),
+                float(commends or 1) / float(reports or 1),
                 reports,
                 commends
             ),
