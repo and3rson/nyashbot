@@ -1235,9 +1235,8 @@ class CarmaHandler(Command):
 
     def handle_report(self, engine, message, cmd, args):
         args = args.strip().strip('@')
-        print(args, message.from_user.username.strip('@'))
         if args == message.from_user.username.strip('@'):
-            raise Exception('Ніззя репортити/коммендити себе самого, дурнику!')
+            raise Exception('Ніззя репортити себе самого, дурнику!')
         if not len(args):
             raise Exception(
                 'Введіть нік того, на кого бажаєте поскаржитись!'
@@ -1252,6 +1251,9 @@ class CarmaHandler(Command):
         return True
 
     def handle_commend(self, engine, message, cmd, args):
+        args = args.strip().strip('@')
+        if args == message.from_user.username.strip('@'):
+            raise Exception('Ніззя коммендити себе самого, дурнику!')
         if not len(args):
             raise Exception(
                 'Введіть нік того, кого бажаєте похвалити!'
@@ -1279,7 +1281,7 @@ class CarmaHandler(Command):
 
         engine.telegram.sendMessage(
             text='Карма: {}\n{} репорт(ів), {} комменд(ів)'.format(
-                commends - reports,
+                float(commends) / float(reports),
                 reports,
                 commends
             ),
