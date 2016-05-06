@@ -1185,3 +1185,101 @@ class MemeHandler(Command):
         # os.unlink(tf.name)
 
         return True
+
+
+class CarmaHandler(Command):
+    def __init__(self):
+        self.db = db
+        self.db.upsert('carma', [
+            ('username', 'varchar(64)'),
+            ('commends', 'int'),
+            ('reports', 'int'),
+        ])
+        self.db.upsert('feedbacks', [
+            ('username', 'varchar(64)'),
+            ('who', 'varchar(64)'),
+            ('message', 'int'),
+            ('rating', 'int')
+        ])
+
+    def submit_score(self, username, good):
+        results = db.select(
+            'SELECT * '
+            'FROM carma WHERE username="{}"'.format(
+                username
+            )
+        )
+        if not results:
+            db.execute(
+                'INSERT INTO carma(username, commends, reports) '
+                'VALUES("{}", 0, 0)'.format(username)
+            )
+            commends = 0
+            reports = 0
+        else:
+            _, _, commends, reports = results[0]
+
+        if good:
+            commends += 1
+        else:
+            reports += 1
+
+        db.execute(
+            'UPDATE carma SET commends={}, reports={} '
+            'WHERE username="{}"'.format(
+                commends,
+                reports,
+                username
+            )
+        )
+
+    def handle_report(self, engine, message, cmd, args):
+        if args.startswith('@'):
+            args = args[1:]
+        if not len(args):
+            raise Exception(
+                'Введіть нік того, на кого бажаєте поскаржитись!'
+                'Приклад: /report @megaspro'
+            )
+        self.submit_score(args, False)
+        engine.telegram.sendMessage(
+            text='Вашу скаргу прийнято. Дякуємо за те,'
+            'що допомагаєте зробити спільноту Днота 2 кращою!',
+            chat_id=message.chat_id
+        )
+        return True
+
+    def handle_commend(self, engine, message, cmd, args):
+        if not len(args):
+            raise Exception(
+                'Введіть нік того, кого бажаєте похвалити!'
+                'Приклад: /commend @megaspro'
+            )
+        self.submit_score(args, True)
+        engine.telegram.sendMessage(
+            text='Ваш комменд прийнято!',
+            chat_id=message.chat_id
+        )
+        return True
+
+    def handle_carma(self, engine, message, cmd, args):
+        username = message.from_user.username or message.from_user.id
+        results = db.select(
+            'SELECT * FROM carma '
+            'WHERE username="{}"'.format(
+                username
+            )
+        )
+        if not len(results):
+            raise Exception('Вас ще ніхто не комендив/репортив.')
+
+        _, _, commends, reports = results[0]
+
+        engine.telegram.sendMessage(
+            text='Карма: {}\n{} репорт(ів), {} комменд(ів)'.format(
+                commends - reports,
+                reports,
+                commends
+            ),
+            chat_id=message.chat_id
+        )

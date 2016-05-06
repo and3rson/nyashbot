@@ -117,7 +117,8 @@ if __name__ == '__main__':
         handlers.DotaRandom(), handlers.Roll(), handlers.Questions(), handlers.Facts(), handlers.PornRoll(),
         handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler(),
         handlers.TitsBoobsHandler(), handlers.ResponseHandler(), handlers.UTHandler(),
-        handlers.RealGirlsHandler(), handlers.CancelHandler(), handlers.InlineAudioHandler()
+        handlers.RealGirlsHandler(), handlers.CancelHandler(), handlers.InlineAudioHandler(),
+        handlers.CarmaHandler()
     )
 
     # tasks.NineGagPoster(bot)
