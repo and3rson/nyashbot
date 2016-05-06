@@ -1267,15 +1267,17 @@ class CarmaHandler(Command):
         return True
 
     def handle_carma(self, engine, message, cmd, args):
-        username = message.from_user.username or message.from_user.id
+        username = args.strip().strip('@') or message.from_user.username or message.from_user.id
+
         results = db.select(
             'SELECT * FROM carma '
             'WHERE username="{}"'.format(
                 username
             )
         )
+
         if not len(results):
-            raise Exception('Вас ще ніхто не комендив/репортив.')
+            raise Exception('{} ще не має жодного комменду чи репорту.')
 
         _, _, commends, reports = results[0]
 
