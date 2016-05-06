@@ -1235,7 +1235,7 @@ class CarmaHandler(Command):
 
     def handle_report(self, engine, message, cmd, args):
         args = args.strip().strip('@')
-        print args, message.from_user.username.strip('@')
+        print(args, message.from_user.username.strip('@'))
         if args == message.from_user.username.strip('@'):
             raise Exception('Ніззя репортити/коммендити себе самого, дурнику!')
         if not len(args):
