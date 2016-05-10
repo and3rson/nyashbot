@@ -31,6 +31,7 @@ import traceback
 from imgurpython import ImgurClient
 import query3
 from PIL import Image, ImageDraw, ImageFont
+from gtts_token import gtts_token
 
 
 class MLStripper(HTMLParser):
@@ -1292,3 +1293,55 @@ class CarmaHandler(Command):
             ),
             chat_id=message.chat_id
         )
+
+
+class SayHandler(Command):
+    def __init__(self):
+        pass
+
+    def handle_say(self, engine, message, cmd, args):
+        phrase = args.strip().encode('utf-8')
+        if not len(phrase):
+            raise Exception(
+                'Введіть, що сказати!'
+                'Приклад: /report Мегас поц'
+            )
+        tk = gtts_token.Token().calculate_token(phrase)
+        query = urllib.urlencode(dict(
+            q=phrase,
+            ie='UTF-8',
+            tl='ru',
+            total=1,
+            textlen=len(phrase),
+            tk=tk,
+            client='t',
+            ttsspeed=0.5
+        ))
+        url = 'https://translate.google.com/translate_tts?' + query
+        print(url)
+        request = urllib2.Request(url)
+        request.add_header('Referer', 'https://translate.google.com/')
+        request.add_header('Accept-Encoding', 'identity;q=1, *;q=0')
+        request.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.75 Safari/537.36')
+        request.add_header('Range', 'bytes=0-')
+        response = urllib2.urlopen(request)
+        data = response.read()
+
+        af = NamedTemporaryFile(delete=False, suffix='.mp3')
+        af.write(data)
+        af.seek(0)
+
+        af = open(af.name, 'rb')
+
+        try:
+            engine.telegram.sendAudio(
+                chat_id=message.chat_id,
+                audio=af,
+                title=phrase
+            )
+            os.unlink(af.name)
+            return True
+        except:
+            os.unlink(af.name)
+            raise
+        return True

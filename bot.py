@@ -118,7 +118,7 @@ if __name__ == '__main__':
         handlers.Stars(), handlers.BarrelRollHandler(), handlers.AdminHandler(),
         handlers.TitsBoobsHandler(), handlers.ResponseHandler(), handlers.UTHandler(),
         handlers.RealGirlsHandler(), handlers.CancelHandler(), handlers.InlineAudioHandler(),
-        handlers.CarmaHandler()
+        handlers.CarmaHandler(), handlers.SayHandler()
     )
 
     # tasks.NineGagPoster(bot)
