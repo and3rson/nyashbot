@@ -1302,6 +1302,9 @@ class SayHandler(Command):
     def handle_say_en(self, engine, message, cmd, args):
         return self.handle_say(engine, message, cmd, args, 'en')
 
+    def handle_say_es(self, engine, message, cmd, args):
+        return self.handle_say(engine, message, cmd, args, 'es')
+
     def handle_say(self, engine, message, cmd, args, lang='ru'):
         phrase = args.strip().encode('utf-8')
         if not len(phrase):
