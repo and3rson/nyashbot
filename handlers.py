@@ -1299,7 +1299,10 @@ class SayHandler(Command):
     def __init__(self):
         pass
 
-    def handle_say(self, engine, message, cmd, args):
+    def handle_say_en(self, engine, message, cmd, args):
+        return self.handle_say(engine, message, cmd, args, 'en')
+
+    def handle_say(self, engine, message, cmd, args, lang='ru'):
         phrase = args.strip().encode('utf-8')
         if not len(phrase):
             raise Exception(
@@ -1310,7 +1313,7 @@ class SayHandler(Command):
         query = urllib.urlencode(dict(
             q=phrase,
             ie='UTF-8',
-            tl='ru',
+            tl=lang,
             total=1,
             textlen=len(phrase),
             tk=tk,
