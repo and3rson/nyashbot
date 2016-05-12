@@ -33,6 +33,8 @@ import query3
 from PIL import Image, ImageDraw, ImageFont
 from gtts_token import gtts_token
 import re
+import pyjslint
+from subprocess import Popen, PIPE
 
 
 class MLStripper(HTMLParser):
@@ -1363,3 +1365,104 @@ class SayHandler(Command):
             os.unlink(af.name)
             raise
         return True
+
+
+class SayHandler(Command):
+    def __init__(self):
+        pass
+
+    def handle_test_js(self, engine, message, cmd, args):
+        out = self.validate(message.text.strip()[9:], 'jslint', 'js')
+        return self.process(engine, message, '\n'.join(out.strip().split('\n')[1:]).strip())
+
+    def handle_test_php(self, engine, message, cmd, args):
+        out = self.validate(message.text.strip()[10:], 'phplint', 'php')
+        return self.process(engine, message, '\n'.join(out.strip().split('\n')[:-1]).strip())
+
+    def process(self, engine, message, out):
+        if out:
+            engine.telegram.sendMessage(
+                text='В коді є помилки!\n\n{}'.format(
+                    out
+                ),
+                chat_id=message.chat_id
+            )
+        else:
+            engine.telegram.sendMessage(
+                text='Код чистий, йопт!',
+                chat_id=message.chat_id
+            )
+        return True
+
+
+    def validate(self, src, app, ext):
+        f = NamedTemporaryFile(delete=False, suffix='.' + ext)
+        f.write(src)
+        f.close()
+        out, err = Popen([app, f.name], stdout=PIPE, stderr=PIPE).communicate()
+        os.unlink(f.name)
+
+        return out.strip()
+
+    #     return self.handle_say(engine, message, cmd, args, 'sonid10', voice='Tracy')
+
+    # def handle_say(self, engine, message, cmd, args, lang='sonid26', voice='Alyona'):
+    #     phrase = args.strip().encode('utf-8')
+    #     if not len(phrase):
+    #         raise Exception(
+    #             'Введіть, що сказати!'
+    #             'Приклад: /report Мегас поц'
+    #         )
+    #     tk = gtts_token.Token().calculate_token(phrase)
+    #     query = urllib.urlencode(dict(
+    #         MyLanguages=lang,
+    #         MySelectedVoice=voice,
+    #         MyTextForTTS=phrase,
+    #         t=1,
+    #         SendToVaaS=''
+    #         # q=phrase,
+    #         # ie='UTF-8',
+    #         # tl=lang,
+    #         # total=1,
+    #         # textlen=len(phrase),
+    #         # tk=tk,
+    #         # client='t',
+    #         # ttsspeed=0.5
+    #     ))
+    #     url = 'http://www.acapela-group.com/demo-tts/DemoHTML5Form_V2.php'
+
+    #     request = urllib2.Request(url, query)
+    #     request.add_header('Referer', 'http://www.acapela-group.com/')
+    #     # request.add_header('Accept-Encoding', 'identity;q=1, *;q=0')
+    #     request.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.75 Safari/537.36')
+    #     # request.add_header('Range', 'bytes=0-')
+    #     response = urllib2.urlopen(request)
+
+    #     html = response.read()
+
+    #     url = re.findall('http.*\.mp3', html)
+    #     if not len(url):
+    #         raise Exception('API послав нас нах :/')
+    #     url = url[0]
+
+    #     response = urllib2.urlopen(url.strip())
+    #     data = response.read()
+
+    #     af = NamedTemporaryFile(delete=False, suffix='.mp3')
+    #     af.write(data)
+    #     af.seek(0)
+
+    #     af = open(af.name, 'rb')
+
+    #     try:
+    #         engine.telegram.sendAudio(
+    #             chat_id=message.chat_id,
+    #             audio=af,
+    #             title=phrase
+    #         )
+    #         os.unlink(af.name)
+    #         return True
+    #     except:
+    #         os.unlink(af.name)
+    #         raise
+    #     return True
