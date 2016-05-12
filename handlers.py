@@ -32,6 +32,7 @@ from imgurpython import ImgurClient
 import query3
 from PIL import Image, ImageDraw, ImageFont
 from gtts_token import gtts_token
+import re
 
 
 class MLStripper(HTMLParser):
@@ -1300,12 +1301,9 @@ class SayHandler(Command):
         pass
 
     def handle_say_en(self, engine, message, cmd, args):
-        return self.handle_say(engine, message, cmd, args, 'en')
+        return self.handle_say(engine, message, cmd, args, 'sonid10', voice='Tracy')
 
-    def handle_say_es(self, engine, message, cmd, args):
-        return self.handle_say(engine, message, cmd, args, 'es')
-
-    def handle_say(self, engine, message, cmd, args, lang='ru'):
+    def handle_say(self, engine, message, cmd, args, lang='sonid26', voice='Alyona'):
         phrase = args.strip().encode('utf-8')
         if not len(phrase):
             raise Exception(
@@ -1314,23 +1312,37 @@ class SayHandler(Command):
             )
         tk = gtts_token.Token().calculate_token(phrase)
         query = urllib.urlencode(dict(
-            q=phrase,
-            ie='UTF-8',
-            tl=lang,
-            total=1,
-            textlen=len(phrase),
-            tk=tk,
-            client='t',
-            ttsspeed=0.5
+            MyLanguages=lang,
+            MySelectedVoice=voice,
+            MyTextForTTS=phrase,
+            t=1,
+            SendToVaaS=''
+            # q=phrase,
+            # ie='UTF-8',
+            # tl=lang,
+            # total=1,
+            # textlen=len(phrase),
+            # tk=tk,
+            # client='t',
+            # ttsspeed=0.5
         ))
-        url = 'https://translate.google.com/translate_tts?' + query
-        print(url)
-        request = urllib2.Request(url)
-        request.add_header('Referer', 'https://translate.google.com/')
-        request.add_header('Accept-Encoding', 'identity;q=1, *;q=0')
+        url = 'http://www.acapela-group.com/demo-tts/DemoHTML5Form_V2.php'
+
+        request = urllib2.Request(url, query)
+        request.add_header('Referer', 'http://www.acapela-group.com/')
+        # request.add_header('Accept-Encoding', 'identity;q=1, *;q=0')
         request.add_header('User-Agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.75 Safari/537.36')
-        request.add_header('Range', 'bytes=0-')
+        # request.add_header('Range', 'bytes=0-')
         response = urllib2.urlopen(request)
+
+        html = response.read()
+
+        url = re.findall('http.*\.mp3', html)
+        if not len(url):
+            raise Exception('API послав нас нах :/')
+        url = url[0]
+
+        response = urllib2.urlopen(url.strip())
         data = response.read()
 
         af = NamedTemporaryFile(delete=False, suffix='.mp3')
