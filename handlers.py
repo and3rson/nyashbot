@@ -308,7 +308,12 @@ class Stats(Command):
         u'Carry',
         u'Аматор',
         u'Сапорт',
+        u'Кіт',
         u'Кур\'єр'
+        u'Вард',
+        u'Хліб',
+        u'Шоха',
+        u'Пусте місце'
     )
 
     def __init__(self):
@@ -342,13 +347,13 @@ class Stats(Command):
 
     def handle_stats(self, engine, message, cmd, args):
         if cmd == 'stats':
-            result = self.db.select('SELECT * FROM stats WHERE chat_id = ? ORDER BY message_count DESC LIMIT 5', (message.chat.id,))
+            result = self.db.select('SELECT * FROM stats WHERE chat_id = ? ORDER BY message_count DESC LIMIT 10', (message.chat.id,))
             counts = self.db.select('SELECT COUNT(*) FROM stats UNION SELECT COUNT(*) FROM facts')
             total_all = self.db.select('SELECT SUM(message_count) FROM stats')
             stars_count = stars.select('SELECT COUNT(*) FROM stars')
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
-                text=u'Топ-5 спамерів:\n\n' + '\n'.join(
+                text=u'Топ-10 спамерів:\n\n' + '\n'.join(
                     [
                         u'@{} (**{}** повідомлень) - {}'.format(row[1], row[2], Stats.TITLES[i])
                         for i, row
