@@ -309,7 +309,7 @@ class Stats(Command):
         u'Аматор',
         u'Сапорт',
         u'Кіт',
-        u'Кур\'єр'
+        u'Кур\'єр',
         u'Вард',
         u'Хліб',
         u'Шоха',
@@ -351,6 +351,7 @@ class Stats(Command):
             counts = self.db.select('SELECT COUNT(*) FROM stats UNION SELECT COUNT(*) FROM facts')
             total_all = self.db.select('SELECT SUM(message_count) FROM stats')
             stars_count = stars.select('SELECT COUNT(*) FROM stars')
+            print(result)
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
                 text=u'Топ-10 спамерів:\n\n' + '\n'.join(
