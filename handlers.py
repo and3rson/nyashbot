@@ -348,9 +348,9 @@ class Stats(Command):
     def handle_stats(self, engine, message, cmd, args):
         if cmd == 'stats':
             result = self.db.select('SELECT * FROM stats WHERE chat_id = ? ORDER BY message_count DESC LIMIT 10', (message.chat.id,))
-            counts = self.db.select('SELECT COUNT(*) FROM stats UNION SELECT COUNT(*) FROM facts')
-            total_all = self.db.select('SELECT SUM(message_count) FROM stats')
-            stars_count = stars.select('SELECT COUNT(*) FROM stars')
+            # counts = self.db.select('SELECT COUNT(*) FROM stats UNION SELECT COUNT(*) FROM facts')
+            total_all = self.db.select('SELECT SUM(message_count) FROM stats WHERE chat_id = ?', (message.chat.id,))
+            # stars_count = stars.select('SELECT COUNT(*) FROM stars')
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
                 text=u'Топ-10 спамерів:\n\n' + '\n'.join(
@@ -358,14 +358,9 @@ class Stats(Command):
                         u'@{} (**{}** повідомлень) - {}'.format(row[1], row[2], Stats.TITLES[i])
                         for i, row
                         in enumerate(result)
-                        ]
-                ) + u'\n\nВсього написано як мінімум {} повідомлень.\nВ базі **{}** юзер(ів) і **{}** упоротий(х) факт(ів).\nПроіндексовано **{}** порнозірок з XVideos.\n\nКрім того, доводимо до вашого відома, що {}.\n\n{}'.format(
+                    ]
+                ) + u'\n\nВсього написано як мінімум {} повідомлень.\n'.format(
                     total_all[0][0],
-                    counts[0][0],
-                    counts[1][0],
-                    stars_count[0][0],
-                    self.get_fact(message.chat.id),
-                    self.get_version()
                 ),
                 parse_mode='Markdown'
             )
