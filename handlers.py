@@ -14,7 +14,7 @@ from urllib import urlencode
 import urllib2
 from bs4 import BeautifulSoup
 import time
-from telegram.inlinequeryresult import (
+from telegram import (
     InlineQueryResultArticle,
     InlineQueryResultPhoto
 )
@@ -208,7 +208,7 @@ class RealGirlsHandler(Command):
         client = ImgurClient(configurator.get('IMGUR_KEY'), configurator.get('IMGUR_SECRET'))
 
         gallery = client.subreddit_gallery(source, sort='new', window='all', page=int(random() * 30))
-        gallery = filter(lambda item: item.size > 0, gallery)
+        gallery = filter(lambda item: hasattr(item, 'size') and item.size > 0, gallery)
 
         print(gallery)
 
@@ -309,7 +309,7 @@ class Stats(Command):
         u'Аматор',
         u'Сапорт',
         u'Кіт',
-        u'Кур\'єр'
+        u'Кур\'єр',
         u'Вард',
         u'Хліб',
         u'Шоха',

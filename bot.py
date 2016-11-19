@@ -54,6 +54,8 @@ class Bot(object):
                         break
         else:
             message = update.message
+            if not message or not message.text:
+                return
             match = re.findall('^/([a-zA-Z_0-9]+)(\s+(.+$))?', message.text.strip())
 
             if match:
