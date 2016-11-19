@@ -351,17 +351,18 @@ class Stats(Command):
             # counts = self.db.select('SELECT COUNT(*) FROM stats UNION SELECT COUNT(*) FROM facts')
             total_all = self.db.select('SELECT SUM(message_count) FROM stats WHERE chat_id = ?', (message.chat.id,))
             # stars_count = stars.select('SELECT COUNT(*) FROM stars')
+            text = u'Топ-10 спамерів:\n\n' + '\n'.join(
+                [
+                    u'@{} (**{}** повідомлень) - {}'.format(row[1], row[2], Stats.TITLES[i])
+                    for i, row
+                    in enumerate(result)
+                ]
+            ) + u'\n\nВсього написано як мінімум {} повідомлень.\n'.format(
+                total_all[0][0],
+            )
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
-                text=u'Топ-10 спамерів:\n\n' + '\n'.join(
-                    [
-                        u'@{} (**{}** повідомлень) - {}'.format(row[1], row[2], Stats.TITLES[i])
-                        for i, row
-                        in enumerate(result)
-                    ]
-                ) + u'\n\nВсього написано як мінімум {} повідомлень.\n'.format(
-                    total_all[0][0],
-                ),
+                text=text,
                 parse_mode='Markdown'
             )
             return True
