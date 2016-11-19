@@ -353,7 +353,7 @@ class Stats(Command):
             # stars_count = stars.select('SELECT COUNT(*) FROM stars')
             text = u'Топ-10 спамерів:\n\n' + '\n'.join(
                 [
-                    u'@{} (*{}* повідомлень) - {}'.format(row[1], row[2], Stats.TITLES[i])
+                    u'@{} ({} повідомлень) - {}'.format(row[1], row[2], Stats.TITLES[i])
                     for i, row
                     in enumerate(result)
                 ]
@@ -363,7 +363,7 @@ class Stats(Command):
             engine.telegram.sendMessage(
                 chat_id=message.chat_id,
                 text=text,
-                parse_mode='Markdown'
+                parse_mode=None
             )
             return True
         else:
